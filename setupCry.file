@@ -1,0 +1,10 @@
+returnNeutrons 1
+returnProtons 0
+returnGammas 0
+returnElectrons 0
+returnMuons 0
+returnPions 0
+date 3-14-2026
+latitude 30.0
+altitude 0
+subboxLength 50
