@@ -182,7 +182,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
         soilLogicalLayers[i] =
             new G4LogicalVolume(solidLayer, soilMixture, nameLogical);
 
-        G4double t = 0.5 + 0.5 * (carbonVolumeFraction / 0.15);
+        G4double t = 0.8 + 0.5 * (carbonVolumeFraction / 0.15);
         G4VisAttributes* visSoil =
             new G4VisAttributes(G4Colour(0.74 * t, 0.55 * t, 0.45 * t, 0.4));
         visSoil->SetForceSolid(true);

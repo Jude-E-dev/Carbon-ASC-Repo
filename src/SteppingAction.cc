@@ -52,4 +52,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
     analysisManager->FillNtupleIColumn(i++, track->GetTrackID());
 
     analysisManager->AddNtupleRow();
+
+    // Kill the secondary; tertiaries will be generated during replay.
+    track->SetTrackStatus(fStopAndKill);
 }

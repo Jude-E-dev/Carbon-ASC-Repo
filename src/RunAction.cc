@@ -3,10 +3,12 @@
 #include <G4AnalysisManager.hh>
 
 #include <G4ios.hh>
+// #include <G4Hdf5AnalysisManager.hh>
 
 RunAction::RunAction() {
+    // auto analysisManager = G4Hdf5AnalysisManager::Instance();
     auto analysisManager = G4AnalysisManager::Instance();
-    analysisManager->SetDefaultFileType("csv");
+    analysisManager->SetDefaultFileType("hdf5");
     analysisManager->CreateNtuple("SecondaryGammas", "Secondary Gammas at First Step");
     analysisManager->CreateNtupleDColumn("E");
     analysisManager->CreateNtupleDColumn("p_x");
@@ -31,7 +33,6 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
     analysisManager->OpenFile("out");
 
     startTime = std::chrono::steady_clock::now();
-    G4cout << "Starting: " << startTime.time_since_epoch().count() << G4endl;
 }
 
 void RunAction::EndOfRunAction(const G4Run* aRun) {

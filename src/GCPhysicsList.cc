@@ -17,7 +17,7 @@
 #include <G4StoppingPhysics.hh>
 
 GCPhysicsList::GCPhysicsList(G4bool highPrecision, G4int ver) {
-    defaultCutValue = 7 * CLHEP::mm;
+    defaultCutValue = 0.1 * CLHEP::mm;
     SetCutValue(0, "proton");
     SetVerboseLevel(ver);
 
