@@ -7,10 +7,22 @@
 #include <G4SDManager.hh>
 #include <G4SystemOfUnits.hh>
 #include <G4VisAttributes.hh>
+#include <cmath>
 
-DetectorConstruction::DetectorConstruction() :
+DetectorConstruction::DetectorConstruction(
+    G4double soilCarbonPercentage,
+    G4int numSoilLayers,
+    G4double surfaceBias,
+    G4double soilDepth,
+    G4double soilWidth
+) :
     G4VUserDetectorConstruction(),
-    soilLogicalLayers() {}
+    soilLogicalLayers(numSoilLayers, nullptr),
+    soilCarbonPercentage {soilCarbonPercentage},
+    numSoilLayers {numSoilLayers},
+    surfaceBias {surfaceBias},
+    soilDepth {soilDepth},
+    soilWidth {soilWidth} {}
 
 DetectorConstruction::~DetectorConstruction() {}
 
@@ -63,13 +75,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
     /* ---------------------------------- World --------------------------------- */
 
-    G4double world_sizeXY = 50 * m;
-    G4double world_sizeZ = 100 * m;
     G4Box* solidWorld = new G4Box(
         "WorldSolid",
-        0.5 * world_sizeXY,
-        0.5 * world_sizeXY,
-        0.5 * world_sizeZ
+        0.5 * soilWidth,
+        0.5 * soilWidth,
+        soilDepth // twice as long as soil depth
     );
 
     G4LogicalVolume* logicWorld =
@@ -92,33 +102,34 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     );
 
     /* ------------------------------ Soil Volumes ------------------------------ */
+    /* -------------- https://www.desmos.com/calculator/tcl1fcxpzj -------------- */
 
+    G4double airDensity = air->GetDensity() / (g / cm3);
+    G4double waterDensity = water->GetDensity() / (g / cm3);
+    G4double carbonDensity = soilOrganicCarbon->GetDensity() / (g / cm3);
+    G4double mineralDensity = mineralComponent->GetDensity() / (g / cm3);
+
+    // Soil parameters, from McTaggart
     G4double airVolumeFraction = 0.25;
     G4double waterVolumeFraction = 0.25;
-    G4double soilSizeZ = 50 * m;
-    G4double soilSizeXY = 50 * m;
-    G4double topThickness = 2 * cm;
-
-    // Exponential decay of organic carbon
     G4double k = 0.02349 / cm;
-    G4double topSizeZ = N_SOIL_LAYERS * topThickness;
-    G4double bottomThickness = soilSizeZ - topSizeZ;
 
-    for (int i = 0; i < N_SOIL_LAYERS; i++) {
-        G4bool isBottom = i == (N_SOIL_LAYERS - 1);
+    // Layering parameters
+    G4double growth =
+        std::pow(1.0 + soilDepth / surfaceBias, 1.0 / numSoilLayers);
 
-        G4double layerThickness = isBottom ? bottomThickness : topThickness;
-        G4double zTop = isBottom ? (-topSizeZ) : (-i * layerThickness);
-        G4double zMid = zTop - 0.5 * layerThickness;
+    // Construct layers
+    G4double zTop = 0.0;
+    for (int i = 0; i < numSoilLayers; i++) {
+        G4double zBottom = -(std::pow(growth, i + 1) - 1) * surfaceBias;
+        if (i == numSoilLayers - 1) {
+            zBottom = -soilDepth;
+        }
+
         G4double carbonVolumeFraction =
-            0.15 * std::exp(k * (isBottom ? (-topSizeZ) : zMid));
+            soilCarbonPercentage * std::exp(k * zTop);
         G4double mineralVolumeFraction = 1.0 - airVolumeFraction
             - waterVolumeFraction - carbonVolumeFraction;
-
-        G4double airDensity = air->GetDensity() / (g / cm3);
-        G4double waterDensity = water->GetDensity() / (g / cm3);
-        G4double carbonDensity = soilOrganicCarbon->GetDensity() / (g / cm3);
-        G4double mineralDensity = mineralComponent->GetDensity() / (g / cm3);
 
         G4double totalMass = airVolumeFraction * airDensity
             + waterVolumeFraction * waterDensity
@@ -147,6 +158,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
         soilMixture->AddMaterial(mineralComponent, mineralMassFraction);
 
         G4cout << soilName << ": {\n\t"
+               << "pos: {z top: " << zTop << ", z bot: " << zBottom << "},\n\t"
                << "air: { dens: " << airDensity
                << ", vol frac: " << airVolumeFraction
                << ", mass frac: " << airMassFraction << " },\n\t"
@@ -174,9 +186,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
         G4Box* solidLayer = new G4Box(
             nameSolid,
-            0.5 * soilSizeXY,
-            0.5 * soilSizeXY,
-            0.5 * layerThickness
+            0.5 * soilWidth,
+            0.5 * soilWidth,
+            0.5 * (zTop - zBottom)
         );
 
         soilLogicalLayers[i] =
@@ -184,13 +196,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
         G4double t = 0.8 + 0.5 * (carbonVolumeFraction / 0.15);
         G4VisAttributes* visSoil =
-            new G4VisAttributes(G4Colour(0.74 * t, 0.55 * t, 0.45 * t, 0.4));
+            new G4VisAttributes(G4Colour(0.74 * t, 0.55 * t, 0.45 * t, 0.3));
         visSoil->SetForceSolid(true);
         soilLogicalLayers[i]->SetVisAttributes(visSoil);
 
         new G4PVPlacement(
             nullptr,
-            G4ThreeVector(0, 0, zMid),
+            G4ThreeVector(0, 0, 0.5 * (zTop + zBottom)),
             soilLogicalLayers[i],
             namePhysical,
             logicWorld,
@@ -198,6 +210,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
             i,
             true
         );
+
+        zTop = zBottom;
     }
 
     return physWorld;

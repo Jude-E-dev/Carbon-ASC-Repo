@@ -15,7 +15,7 @@ void EventAction::BeginOfEventAction(const G4Event* ev) {}
 void EventAction::EndOfEventAction(const G4Event* ev) {
     G4int n = ev->GetEventID();
     if (n % 1000 == 0) {
-        G4cout << "\r" << ev->GetEventID() / 1000 << "k events completed."
+        G4cout << "\n" << ev->GetEventID() / 1000 << "k events completed."
                << std::flush;
     }
 }

@@ -1,7 +1,9 @@
 #include <G4RandomTools.hh>
 #include <G4RunManagerFactory.hh>
+#include <G4SystemOfUnits.hh>
 #include <G4UIExecutive.hh>
 #include <G4VisExecutive.hh>
+#include <random>
 
 #include "ActionInitialization.hh"
 #include "DetectorConstruction.hh"
@@ -13,13 +15,16 @@ int main(int argc, char** argv) {
         ui = new G4UIExecutive(argc, argv);
     }
 
+    std::random_device rd;
     G4Random::setTheEngine(new CLHEP::RanecuEngine);
-    G4Random::setTheSeed(time(nullptr));
+    G4Random::setTheSeed(rd());
 
     auto runManager =
         G4RunManagerFactory::CreateRunManager(G4RunManagerType::SerialOnly);
 
-    runManager->SetUserInitialization(new DetectorConstruction());
+    runManager->SetUserInitialization(
+        new DetectorConstruction(0.15, 256, 0.001 * mm, 50 * m, 50 * m)
+    );
     runManager->SetUserInitialization(new GCPhysicsList(true));
     runManager->SetUserInitialization(new ActionInitialization());
 

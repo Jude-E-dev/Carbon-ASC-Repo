@@ -29,9 +29,12 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
     auto analysisManager = G4AnalysisManager::Instance();
 
     // Energy
+    G4double energy = point->GetKineticEnergy();
+    if (energy < 0.3)
+        return;
+
     G4int i = 0;
-    analysisManager->FillNtupleDColumn(i++, point->GetKineticEnergy());
-    // kineticEnergies.push_back(point->GetKineticEnergy());
+    analysisManager->FillNtupleDColumn(i++, energy);
 
     // Momentum
     G4ThreeVector momentumDir = point->GetMomentumDirection();
@@ -45,11 +48,8 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
     analysisManager->FillNtupleDColumn(i++, pos.getZ());
 
     // Metadata
-    analysisManager->FillNtupleSColumn(i++, particleDef->GetParticleName());
     analysisManager->FillNtupleSColumn(i++, creator->GetProcessName());
     analysisManager->FillNtupleDColumn(i++, track->GetGlobalTime());
-    analysisManager->FillNtupleIColumn(i++, stepNum);
-    analysisManager->FillNtupleIColumn(i++, track->GetTrackID());
 
     analysisManager->AddNtupleRow();
 
