@@ -1,11 +1,8 @@
 #pragma once
 
-// #include <G4String.hh>
 #include <G4UserRunAction.hh>
 
 class G4Run;
-// class RunActionMessenger;
-// class GCDetectorConstruction;
 
 class RunAction: public G4UserRunAction {
   public:

@@ -2,6 +2,7 @@
 
 #include <G4AnalysisManager.hh>
 #include <G4ProcessManager.hh>
+#include <G4SystemOfUnits.hh>
 #include <G4Track.hh>
 
 #define GAMMA_PDG 22
@@ -30,7 +31,8 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
 
     // Energy
     G4double energy = point->GetKineticEnergy();
-    if (energy < 0.3)
+    // Skip low energy emissions
+    if (energy < 0.3 * MeV)
         return;
 
     G4int i = 0;

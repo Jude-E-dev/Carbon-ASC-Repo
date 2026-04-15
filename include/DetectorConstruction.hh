@@ -5,8 +5,6 @@
 class G4VPhysicalVolume;
 class G4LogicalVolume;
 
-// #define N_SOIL_LAYERS 256
-
 class DetectorConstruction: public G4VUserDetectorConstruction {
   public:
     DetectorConstruction(

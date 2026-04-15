@@ -1,4 +1,3 @@
-
 #include "GCPhysicsList.hh"
 
 #include <G4DecayPhysics.hh>
@@ -35,8 +34,7 @@ GCPhysicsList::GCPhysicsList(G4bool highPrecision, G4int ver) {
     // RegisterPhysics(new G4HadronElasticPhysicsHP(ver));
     if (highPrecision) {
         RegisterPhysics(new G4HadronPhysicsFTFP_BERT_HP(ver));
-    }
-    else {
+    } else {
         RegisterPhysics(new G4HadronPhysicsFTFP_BERT(ver));
     }
 
