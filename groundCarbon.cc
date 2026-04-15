@@ -7,6 +7,7 @@
 
 #include "ActionInitialization.hh"
 #include "DetectorConstruction.hh"
+#include "GCMode.hh"
 #include "GCPhysicsList.hh"
 
 int main(int argc, char** argv) {
@@ -23,10 +24,12 @@ int main(int argc, char** argv) {
         G4RunManagerFactory::CreateRunManager(G4RunManagerType::SerialOnly);
 
     runManager->SetUserInitialization(
-        new DetectorConstruction(0.15, 256, 0.001 * mm, 50 * m, 50 * m)
+        new DetectorConstruction(0.10, 256, 0.001 * mm, 50 * m, 50 * m)
     );
     runManager->SetUserInitialization(new GCPhysicsList(true));
-    runManager->SetUserInitialization(new ActionInitialization());
+    runManager->SetUserInitialization(
+        new ActionInitialization(GCMode::CharacteriseSoil)
+    );
 
     auto visManager = new G4VisExecutive(argc, argv);
     visManager->Initialize();

@@ -3,8 +3,9 @@
 #include <G4AnalysisManager.hh>
 #include <G4ios.hh>
 #include <random>
+#include <filesystem>
 
-RunAction::RunAction() {
+RunAction::RunAction(GCMode mode) : mode{mode} {
     auto analysisManager = G4AnalysisManager::Instance();
     analysisManager->SetDefaultFileType("csv");
     analysisManager->CreateNtuple(
@@ -27,9 +28,11 @@ RunAction::~RunAction() {}
 
 // Saving data
 void RunAction::BeginOfRunAction(const G4Run* aRun) {
+    std::filesystem::create_directories("outputs");
+
     auto analysisManager = G4AnalysisManager::Instance();
     std::random_device rd;
-    analysisManager->OpenFile("out" + std::to_string(rd()));
+    analysisManager->OpenFile("outputs/out" + std::to_string(rd()));
 
     startTime = std::chrono::steady_clock::now();
 }
