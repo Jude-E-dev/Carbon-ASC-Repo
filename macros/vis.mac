@@ -18,15 +18,7 @@
 /vis/scene/endOfEventAction accumulate
 
 # Axes, scale, etc.
-/vis/scene/add/scale   # Simple scale line
 /vis/scene/add/axes    # Simple axes: x=red, y=green, z=blue.
-
-# Frame
-/vis/set/colour red
-/vis/set/lineWidth 2
-/vis/scene/add/frame   # Simple frame around the view
-/vis/set/colour        # Revert to default colour (white)
-/vis/set/lineWidth     # Revert to default line width (1.)
 
 # Re-establish auto refreshing and verbosity:
 /vis/viewer/set/autoRefresh true

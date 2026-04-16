@@ -2,14 +2,14 @@
 
 #include <G4UserEventAction.hh>
 
-#include "GCMode.hh"
+#include "GCConfig.hh"
 
 class RunAction;
 class G4Step;
 
 class EventAction: public G4UserEventAction {
   public:
-    EventAction(RunAction* runAction, GCMode mode);
+    EventAction(RunAction* runAction, GCConfig config);
     virtual ~EventAction();
 
     virtual void BeginOfEventAction(const G4Event* event);
@@ -17,5 +17,5 @@ class EventAction: public G4UserEventAction {
 
   private:
     RunAction* fRunAction;
-    GCMode mode;
+    GCConfig config;
 };

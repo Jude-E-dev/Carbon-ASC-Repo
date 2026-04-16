@@ -5,7 +5,7 @@
 
 class GCPhysicsList: public G4VModularPhysicsList {
   public:
-    GCPhysicsList(G4bool highPrecision, G4int ver = 1);
+    GCPhysicsList(G4int ver = 1);
     virtual ~GCPhysicsList() = default;
 
     // delete copy constructor and assignment operator

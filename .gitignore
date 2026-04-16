@@ -3,3 +3,4 @@ build/
 analysis/archive/
 analysis/.venv/
 .DS_Store
+.cache/

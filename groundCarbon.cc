@@ -7,10 +7,19 @@
 
 #include "ActionInitialization.hh"
 #include "DetectorConstruction.hh"
-#include "GCMode.hh"
+#include "GCConfig.hh"
 #include "GCPhysicsList.hh"
 
 int main(int argc, char** argv) {
+    /* --------------------------------- Config --------------------------------- */
+
+    auto soil = SoilConfig {0.10, 256, 0.001 * mm, 50 * m, 50 * m};
+    auto config = ReplayEmissions {"inputs/spectra_25k.bin", soil};
+    // auto config = CharacteriseSoilDebug {"csv", "outputs", soil};
+    // auto config = CharacteriseSoilBinary {"outputs", soil};
+
+    /* ------------------------------ Geant4 Setup ------------------------------ */
+
     G4UIExecutive* ui = nullptr;
     if (argc == 1) {
         ui = new G4UIExecutive(argc, argv);
@@ -22,14 +31,9 @@ int main(int argc, char** argv) {
 
     auto runManager =
         G4RunManagerFactory::CreateRunManager(G4RunManagerType::SerialOnly);
-
-    runManager->SetUserInitialization(
-        new DetectorConstruction(0.10, 256, 0.001 * mm, 50 * m, 50 * m)
-    );
+    runManager->SetUserInitialization(new DetectorConstruction(soil));
     runManager->SetUserInitialization(new GCPhysicsList(true));
-    runManager->SetUserInitialization(
-        new ActionInitialization(GCMode::CharacteriseSoil)
-    );
+    runManager->SetUserInitialization(new ActionInitialization(config));
 
     auto visManager = new G4VisExecutive(argc, argv);
     visManager->Initialize();

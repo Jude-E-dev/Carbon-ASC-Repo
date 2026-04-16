@@ -9,20 +9,16 @@
 #include <G4VisAttributes.hh>
 #include <cmath>
 
-DetectorConstruction::DetectorConstruction(
-    G4double soilCarbonPercentage,
-    G4int numSoilLayers,
-    G4double surfaceBias,
-    G4double soilDepth,
-    G4double soilWidth
-) :
+#include "GCConfig.hh"
+
+DetectorConstruction::DetectorConstruction(SoilConfig config) :
     G4VUserDetectorConstruction(),
-    soilLogicalLayers(numSoilLayers, nullptr),
-    soilCarbonPercentage {soilCarbonPercentage},
-    numSoilLayers {numSoilLayers},
-    surfaceBias {surfaceBias},
-    soilDepth {soilDepth},
-    soilWidth {soilWidth} {}
+    soilLogicalLayers(config.numSoilLayers, nullptr),
+    soilCarbonPercentage {config.soilCarbonPercentage},
+    numSoilLayers {config.numSoilLayers},
+    surfaceBias {config.surfaceBias},
+    soilDepth {config.soilDepth},
+    soilWidth {config.soilWidth} {}
 
 DetectorConstruction::~DetectorConstruction() {}
 
@@ -196,8 +192,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
         G4double t = 0.8 + 0.5 * (carbonVolumeFraction / 0.15);
         G4VisAttributes* visSoil =
-            new G4VisAttributes(G4Colour(0.74 * t, 0.55 * t, 0.45 * t, 0.3));
-        visSoil->SetForceSolid(true);
+            new G4VisAttributes(G4Colour(0.74 * t, 0.55 * t, 0.45 * t, 1.0));
+        visSoil->SetForceWireframe(true);
         soilLogicalLayers[i]->SetVisAttributes(visSoil);
 
         new G4PVPlacement(

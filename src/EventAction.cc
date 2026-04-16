@@ -6,9 +6,9 @@
 
 #include "RunAction.hh"
 
-EventAction::EventAction(RunAction* runAction, GCMode mode) :
+EventAction::EventAction(RunAction* runAction, GCConfig config) :
     G4UserEventAction(),
-    mode {mode} {}
+    config {config} {}
 
 EventAction::~EventAction() {}
 
