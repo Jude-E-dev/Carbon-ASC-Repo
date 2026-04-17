@@ -1,7 +1,6 @@
 #pragma once
 
 #include "G4VModularPhysicsList.hh"
-#include "globals.hh"
 
 class GCPhysicsList: public G4VModularPhysicsList {
   public:

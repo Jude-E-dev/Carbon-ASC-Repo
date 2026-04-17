@@ -8,7 +8,6 @@
 #include <cstdlib>
 
 #include "GCConstants.hh"
-#include "GammaEntry.hh"
 
 ReplayPrimaryGeneratorAction::ReplayPrimaryGeneratorAction(
     const std::string& distributionPath,

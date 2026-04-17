@@ -90,3 +90,7 @@ add_custom_target(B1 DEPENDS groundCarbon)
 # Install the executable to 'bin' directory under CMAKE_INSTALL_PREFIX
 #
 install(TARGETS groundCarbon DESTINATION bin)
+
+#-------------------------------- For clangd --------------------------------
+#
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

@@ -1,12 +1,9 @@
 #include "CRYPrimaryGeneratorAction.hh"
 
-#include <iomanip>
-using namespace std;
-
 #include <G4Event.hh>
 #include <G4SystemOfUnits.hh>
 
-#define CRY_DATA_PATH "/Users/justjayiguess/Documents/Geant4/libs/cry_v1.7/data"
+#include "GCConstants.hh"
 
 //----------------------------------------------------------------------------//
 CRYPrimaryGeneratorAction::CRYPrimaryGeneratorAction(const char* inputfile) {

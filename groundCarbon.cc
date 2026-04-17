@@ -13,9 +13,9 @@
 int main(int argc, char** argv) {
     /* --------------------------------- Config --------------------------------- */
 
-    auto soil = SoilConfig {0.10, 256, 0.001 * mm, 50 * m, 50 * m};
-    auto config = ReplayEmissions {"inputs/spectra_25k.bin", soil};
-    // auto config = CharacteriseSoilDebug {"csv", "outputs", soil};
+    auto soil = SoilConfig {0.10, 64, 0.001 * mm, 50 * m, 50 * m};
+    // auto config = ReplayEmissions {"inputs/spectra_25k.bin", soil};
+    auto config = CharacteriseSoilDebug {"csv", "outputs", soil};
     // auto config = CharacteriseSoilBinary {"outputs", soil};
 
     /* ------------------------------ Geant4 Setup ------------------------------ */

@@ -26,7 +26,7 @@ GCPhysicsList::GCPhysicsList(G4int ver) {
     RegisterPhysics(new G4RadioactiveDecayPhysics(ver));
 
     // Problem children - Hadron Physics
-    // RegisterPhysics(new G4HadronElasticPhysicsHP(ver));
+    RegisterPhysics(new G4HadronElasticPhysicsHP(ver));
     RegisterPhysics(new G4HadronPhysicsFTFP_BERT_HP(ver));
 
     // Stopping Physics

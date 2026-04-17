@@ -1,6 +1,6 @@
 #include "RNGWrapper.hh"
 
-#include "Randomize.hh"
+#include <CLHEP/Random/RandomEngine.h>
 
 template CLHEP::HepRandomEngine* RNGWrapper<CLHEP::HepRandomEngine>::m_obj;
 
