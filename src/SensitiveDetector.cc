@@ -4,6 +4,7 @@
 #include <G4RunManager.hh>
 #include <G4VSensitiveDetector.hh>
 #include <G4ios.hh>
+
 #include "EventAction.hh"
 
 SensitiveDetector::SensitiveDetector(const G4String& name) :
@@ -24,7 +25,8 @@ SensitiveDetector::ProcessHits(G4Step* step, G4TouchableHistory* ROhist) {
     double eDep = step->GetTotalEnergyDeposit();
 
     auto analysisManager = G4AnalysisManager::Instance();
-    auto* eventAction = (EventAction*)(G4RunManager::GetRunManager()->GetUserEventAction());
+    auto* eventAction =
+        (EventAction*)(G4RunManager::GetRunManager()->GetUserEventAction());
     eventAction->DepositEnergy(eDep);
     int i = 0;
     analysisManager->FillNtupleDColumn(0, i++, point->GetKineticEnergy());

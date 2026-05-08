@@ -30,11 +30,8 @@ void ActionInitialization::BuildForMaster() const {
 
 void ActionInitialization::Build() const {
     auto* runAction = new RunAction(config);
-    auto* eventAction = new EventAction(runAction, config, updatePeriod);
     SetUserAction(runAction);
-    SetUserAction(eventAction);
-
-    
+    SetUserAction(new EventAction(runAction, config, updatePeriod));
 
     std::visit(
         overloaded {
@@ -43,10 +40,10 @@ void ActionInitialization::Build() const {
                     new ReplayPrimaryGeneratorAction(conf.spectraPath, soil)
                 );
             },
-            [this, eventAction](auto const&) {
+            [this](auto const&) {
                 SetUserAction(new CRYPrimaryGeneratorAction("setupCry.file"));
-                SetUserAction(new SteppingAction(config, eventAction));
-                SetUserAction(new TrackingAction(eventAction));
+                SetUserAction(new SteppingAction(config));
+                SetUserAction(new TrackingAction());
             },
         },
         config

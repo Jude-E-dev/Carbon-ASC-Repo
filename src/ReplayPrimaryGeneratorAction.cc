@@ -54,18 +54,26 @@ void ReplayPrimaryGeneratorAction::GeneratePrimaries(G4Event* ev) {
             if (wasEOF) {
                 binFile.clear();
                 binFile.seekg(0, std::ios::beg);
-                G4cout << "Reached end of replay .bin file. Looping to beginning." << G4endl;
+                G4cout
+                    << "Reached end of replay .bin file. Looping to beginning."
+                    << G4endl;
             }
         } while (z < -soil.soilDepth || wasEOF);
-        
+
         // Uniform distribution on a disk
         G4double rho = soil.soilWidth / 2.0 * std::sqrt(positionDist(rng));
         G4double theta = azimuthDist(rng);
         G4double x = rho * std::cos(theta);
         G4double y = rho * std::sin(theta);
 
-        auto* eventAction = (EventAction*)(G4RunManager::GetRunManager()->GetUserEventAction());
-        eventAction->SetSourceProperties(z, std::sqrt(x*x + y*y), energy, sourcePDG);
+        auto* eventAction =
+            (EventAction*)(G4RunManager::GetRunManager()->GetUserEventAction());
+        eventAction->SetSourceProperties(
+            z,
+            std::sqrt(x * x + y * y),
+            energy,
+            sourcePDG
+        );
 
         G4double pPhi = azimuthDist(rng);
         G4double pr = std::sqrt(1.0 - pz * pz);

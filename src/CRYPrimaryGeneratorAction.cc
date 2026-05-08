@@ -1,11 +1,11 @@
 #include "CRYPrimaryGeneratorAction.hh"
 
-#include <fstream>
-#include <CRYSetup.h>
 #include <CLHEP/Random/Random.h>
+#include <CRYSetup.h>
 
 #include <G4Event.hh>
 #include <G4SystemOfUnits.hh>
+#include <fstream>
 
 #include "GCConstants.hh"
 #include "RNGWrapper.hh"

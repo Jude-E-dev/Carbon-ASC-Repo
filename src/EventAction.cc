@@ -11,7 +11,11 @@
 
 #include "RunAction.hh"
 
-EventAction::EventAction(RunAction* runAction, GCConfig config, int updatePeriod) :
+EventAction::EventAction(
+    RunAction* runAction,
+    GCConfig config,
+    int updatePeriod
+) :
     G4UserEventAction(),
     config {config},
     updatePeriod {updatePeriod},
@@ -45,24 +49,25 @@ void EventAction::EndOfEventAction(const G4Event* ev) {
             analysisManager->AddNtupleRow(1);
         }
     }
-    
+
     SetSourceProperties(0.0, 0.0, 0.0, 0);
     pulseEnergy = 0.0;
 }
 
-void EventAction::RegisterPrimary(int trackID, std::string primaryName, int pdg) {
+void EventAction::RegisterPrimary(
+    int trackID,
+    std::string primaryName,
+    int pdg
+) {
     primariesMap[trackID] = primaryName;
     pdgsMap[trackID] = pdg;
 }
 
 std::string EventAction::GetPrimaryName(const G4Track* track) {
     std::string primary;
-    try
-    {
+    try {
         primary = primariesMap.at(track->GetParentID());
-    }
-    catch (const std::exception& e)
-    {
+    } catch (const std::exception& e) {
         primary = e.what();
     }
     return primary;
@@ -70,18 +75,20 @@ std::string EventAction::GetPrimaryName(const G4Track* track) {
 
 int EventAction::GetPrimaryPDG(const G4Track* track) {
     int primary;
-    try
-    {
+    try {
         primary = pdgsMap.at(track->GetParentID());
-    }
-    catch (const std::exception&)
-    {
+    } catch (const std::exception&) {
         primary = -1;
     }
     return primary;
 }
 
-void EventAction::SetSourceProperties(double depth, double radius, double energy, int pdg) {
+void EventAction::SetSourceProperties(
+    double depth,
+    double radius,
+    double energy,
+    int pdg
+) {
     sourceDepth = depth;
     sourceRadius = radius;
     sourceEnergy = energy;

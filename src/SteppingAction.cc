@@ -12,9 +12,7 @@
 #include "RunAction.hh"
 #include "overloaded.hh"
 
-SteppingAction::SteppingAction(GCConfig config, EventAction* eventAction) :
-    config {config},
-    eventAction {eventAction} {}
+SteppingAction::SteppingAction(GCConfig config) : config {config} {}
 
 void SteppingAction::UserSteppingAction(const G4Step* step) {
     std::visit(
@@ -68,6 +66,8 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
                     creator->GetProcessName()
                 );
                 analysisManager->FillNtupleDColumn(i++, track->GetGlobalTime());
+                auto* eventAction = (EventAction*)G4RunManager::GetRunManager()
+                                        ->GetUserEventAction();
                 analysisManager->FillNtupleSColumn(
                     i++,
                     eventAction->GetPrimaryName(track)
@@ -102,8 +102,10 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
                 if (energy < 0.3 * MeV)
                     return;
 
-                RunAction* runAction = (RunAction*)G4RunManager::GetRunManager()
-                                           ->GetUserRunAction();
+                auto* runManager = G4RunManager::GetRunManager();
+                auto* runAction = (RunAction*)runManager->GetUserRunAction();
+                auto* eventAction =
+                    (EventAction*)runManager->GetUserEventAction();
 
                 runAction->TallyGammaBinary(
                     energy,
