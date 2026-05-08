@@ -20,6 +20,7 @@ class ReplayPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction {
 
   public:
     void GeneratePrimaries(G4Event* anEvent);
+    double GetExposureTime();
 
   private:
     SoilConfig soil;
@@ -29,4 +30,7 @@ class ReplayPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction {
     std::mt19937 rng;
     std::uniform_real_distribution<double> azimuthDist;
     std::uniform_real_distribution<double> positionDist;
+    unsigned long eventsProcessed;
+    unsigned long binFileNumEvents;
+    double binFileExposure;
 };

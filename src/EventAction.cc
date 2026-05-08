@@ -9,6 +9,8 @@
 #include <exception>
 #include <variant>
 
+#include "Configs.hh"
+#include "ReplayPrimaryGeneratorAction.hh"
 #include "RunAction.hh"
 
 EventAction::EventAction(
@@ -35,6 +37,12 @@ void EventAction::EndOfEventAction(const G4Event* ev) {
         G4cout << "\n"
                << ev->GetEventID() / 1000 << "k events completed."
                << std::flush;
+        if (std::holds_alternative<ReplayEmissions>(config)) {
+            auto* replayGenerator =
+                (ReplayPrimaryGeneratorAction*)G4RunManager::GetRunManager()
+                    ->GetUserPrimaryGeneratorAction();
+            G4cout << "Exposed: " << replayGenerator->GetExposureTime() << "s" << G4endl;
+        }
     }
 
     if (std::holds_alternative<ReplayEmissions>(config)) {

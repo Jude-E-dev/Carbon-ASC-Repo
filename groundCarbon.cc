@@ -3,32 +3,73 @@
 #include <G4SystemOfUnits.hh>
 #include <G4UIExecutive.hh>
 #include <G4VisExecutive.hh>
+#include <G4ios.hh>
+#include <fstream>
 #include <random>
+#include <string>
+#include <vector>
 
 #include "ActionInitialization.hh"
 #include "Configs.hh"
 #include "DetectorConstruction.hh"
 #include "GCPhysicsList.hh"
 
-int main(int argc, char** argv) {
+int invalidArguments() {
+    G4cerr
+        << "Usage: ./groundCarbon [(character-debug)|(character-bin)|(replay <spectrum.bin>)] <macro.mac (optional)>\n"
+        << "  E.g., ./groundCarbon character-debug characterise.mac\n"
+        << "Or: ./groundCarbon merge-spectra <output_path.bin> spectrum1.bin spectrum2.bin ...\n"
+        << "Note: if no macro is given, Geant4 will launch a GUI." << G4endl;
+    return 1;
+}
+
+void mergeSpectra(std::vector<std::string> args);
+
+int main(int argc, char* argv[]) {
+    std::vector<std::string> args(argv, argv + argc);
+
     /* --------------------------------- Config --------------------------------- */
 
+    // arg parse spaghetti :)
+
+    if (args.size() < 2) {
+        return invalidArguments();
+    }
+
+    std::string macro = "";
+    int updatePeriod = 1000;
+
     auto soilConfig = SoilConfig {0.15, 16, 50 * cm, 5 * m}; // smaller volume
-    // auto soilConfig = SoilConfig {
-    //     0.15,
-    //     64,
-    //     50 * m,
-    //     50 * m
-    // }; // For char
-    auto gcConfig =
-        ReplayEmissions {"spectra/spectrum_1M_134s6832.bin", "csv", "replay"};
-    // auto gcConfig = CharacteriseSoilDebug {"csv", "character"};
-    // auto gcConfig = CharacteriseSoilBinary {"spectra"};
+    GCConfig gcConfig;
+    if (args[1] == "character-debug") {
+        gcConfig = CharacteriseSoilDebug {"csv", "character"};
+        if (args.size() == 3) {
+            macro = args[2];
+        }
+    } else if (args[1] == "character-bin") {
+        gcConfig = CharacteriseSoilBinary {"spectra"};
+        if (args.size() == 3) {
+            macro = args[2];
+        }
+    } else if (args[1] == "replay") {
+        updatePeriod = 50000;
+        if (args.size() < 3)
+            return invalidArguments();
+        gcConfig = ReplayEmissions {args[2], "csv", "replay"};
+        if (args.size() == 4) {
+            macro = args[3];
+        }
+    } else if (args[1] == "merge-spectra") {
+        mergeSpectra(args);
+        return 0;
+    } else {
+        return invalidArguments();
+    }
 
     /* ------------------------------ Geant4 Setup ------------------------------ */
 
     G4UIExecutive* ui = nullptr;
-    if (argc == 1) {
+    if (macro == "") {
         ui = new G4UIExecutive(argc, argv);
     }
 
@@ -43,7 +84,7 @@ int main(int argc, char** argv) {
     );
     runManager->SetUserInitialization(new GCPhysicsList());
     runManager->SetUserInitialization(
-        new ActionInitialization(soilConfig, gcConfig, 1000)
+        new ActionInitialization(soilConfig, gcConfig, updatePeriod)
     );
 
     auto visManager = new G4VisExecutive(argc, argv);
@@ -54,9 +95,7 @@ int main(int argc, char** argv) {
 
     if (!ui) {
         // batch mode
-        G4String command = "/control/execute ";
-        G4String fileName = argv[1];
-        UImanager->ApplyCommand(command + fileName);
+        UImanager->ApplyCommand("/control/execute " + macro);
     } else {
         // interactive mode
         UImanager->ApplyCommand("/control/execute init_vis.mac");
@@ -66,4 +105,39 @@ int main(int argc, char** argv) {
 
     delete visManager;
     delete runManager;
+}
+
+void mergeSpectra(std::vector<std::string> args) {
+    // Calculate total exposure
+    double totalExposure = 0.0;
+    for (int i = 3; i < args.size(); i++) {
+        std::ifstream spectrum(args[i], std::ios::in | std::ios::binary);
+        if (!spectrum.is_open())
+            continue;
+
+        double exposure;
+        spectrum.read(reinterpret_cast<char*>(&exposure), sizeof(double));
+        totalExposure += exposure;
+        spectrum.close();
+    }
+
+    // Merge files
+    std::ofstream out(args[2], std::ios::binary);
+    out.write(reinterpret_cast<const char*>(&totalExposure), sizeof(double));
+    for (int i = 3; i < args.size(); i++) {
+        std::ifstream spectrum(args[i], std::ios::in | std::ios::binary);
+        if (!spectrum.is_open())
+            continue;
+
+        spectrum.seekg(sizeof(double), std::ios::beg);
+
+        char buffer[65536];
+        while (spectrum.read(buffer, sizeof(buffer))) {
+            out.write(buffer, spectrum.gcount());
+        }
+        if (spectrum.gcount() > 0) {
+            out.write(buffer, spectrum.gcount());
+        }
+    }
+    out.close();
 }

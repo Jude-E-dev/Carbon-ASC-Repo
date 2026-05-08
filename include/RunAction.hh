@@ -16,6 +16,8 @@ class RunAction: public G4UserRunAction {
     void BeginOfRunAction(const G4Run*) override;
     void EndOfRunAction(const G4Run*) override;
     void TallyGammaBinary(double energy, double momentumZ, double depth, int pdg);
+    void IncrementReplayExposure(double dt);
+    double GetReplayExposure();
 
   private:
     std::chrono::steady_clock::time_point startTime;
@@ -24,4 +26,7 @@ class RunAction: public G4UserRunAction {
     // Only used in GCConfig::CharacteriseSoilBinary
     std::vector<GammaEntry> binEntries;
     std::ofstream binFile;
+
+    // Only used in GCConfig::Replay
+    double replayExposure = 0.0;
 };

@@ -95,7 +95,8 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
                 );
                 binEntries.clear();
             },
-            [](const ReplayEmissions& conf) {
+            [this](const ReplayEmissions& conf) {
+                replayExposure = 0.0;
                 std::filesystem::create_directories(conf.outputDirectoryName);
                 auto analysisManager = G4AnalysisManager::Instance();
                 std::random_device rd;
@@ -129,7 +130,15 @@ void RunAction::EndOfRunAction(const G4Run* aRun) {
                        << generatorAction->GetExposureTime() << G4endl;
             },
             [this](const CharacteriseSoilBinary& conf) {
+                auto* generatorAction =
+                    (CRYPrimaryGeneratorAction*)G4RunManager::GetRunManager()
+                        ->GetUserPrimaryGeneratorAction();
+                double exposure = generatorAction->GetExposureTime();
                 if (binFile.is_open()) {
+                    binFile.write(
+                        reinterpret_cast<const char*>(&exposure),
+                        sizeof(exposure)
+                    );
                     for (GammaEntry entry : binEntries) {
                         binFile.write(
                             reinterpret_cast<const char*>(&entry.energy),
@@ -151,12 +160,7 @@ void RunAction::EndOfRunAction(const G4Run* aRun) {
                     binFile.close();
                 }
 
-                auto* generatorAction =
-                    (CRYPrimaryGeneratorAction*)G4RunManager::GetRunManager()
-                        ->GetUserPrimaryGeneratorAction();
-
-                G4cout << "Exposure time: "
-                       << generatorAction->GetExposureTime() << G4endl;
+                G4cout << "Exposure time: " << exposure << G4endl;
             },
             [](const ReplayEmissions& conf) {
                 auto analysisManager = G4AnalysisManager::Instance();
@@ -182,4 +186,12 @@ void RunAction::TallyGammaBinary(
     entry.depth = depth;
     entry.sourcePDG = sourcePDG;
     binEntries.push_back(entry);
+}
+
+void RunAction::IncrementReplayExposure(double dt) {
+    replayExposure += dt;
+}
+
+double RunAction::GetReplayExposure() {
+    return replayExposure;
 }
