@@ -8,10 +8,11 @@
 #include <G4IonElasticPhysics.hh>
 #include <G4IonPhysics.hh>
 #include <G4RadioactiveDecayPhysics.hh>
+#include <G4StepLimiterPhysics.hh>
 #include <G4StoppingPhysics.hh>
 
 GCPhysicsList::GCPhysicsList(G4int ver) {
-    defaultCutValue = 0.1 * CLHEP::mm;
+    defaultCutValue = 1.0 * CLHEP::mm;
     SetCutValue(0, "proton");
     SetVerboseLevel(ver);
 
@@ -35,4 +36,7 @@ GCPhysicsList::GCPhysicsList(G4int ver) {
     // Ion Physics
     RegisterPhysics(new G4IonElasticPhysics(ver));
     RegisterPhysics(new G4IonPhysics(ver));
+
+    // // Step limiting for layered soil
+    // RegisterPhysics(new G4StepLimiterPhysics);
 }

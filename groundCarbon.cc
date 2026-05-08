@@ -6,17 +6,24 @@
 #include <random>
 
 #include "ActionInitialization.hh"
+#include "Configs.hh"
 #include "DetectorConstruction.hh"
-#include "GCConfig.hh"
 #include "GCPhysicsList.hh"
 
 int main(int argc, char** argv) {
     /* --------------------------------- Config --------------------------------- */
 
-    auto soil = SoilConfig {0.10, 64, 0.001 * mm, 50 * m, 50 * m};
-    // auto config = ReplayEmissions {"inputs/spectra_25k.bin", soil};
-    auto config = CharacteriseSoilDebug {"csv", "outputs", soil};
-    // auto config = CharacteriseSoilBinary {"outputs", soil};
+    auto soilConfig = SoilConfig {0.15, 16, 50 * cm, 5 * m}; // smaller volume
+    // auto soilConfig = SoilConfig {
+    //     0.15,
+    //     64,
+    //     50 * m,
+    //     50 * m
+    // }; // For char
+    auto gcConfig =
+        ReplayEmissions {"spectra/spectrum_1M_134s6832.bin", "csv", "replay"};
+    // auto gcConfig = CharacteriseSoilDebug {"csv", "character"};
+    // auto gcConfig = CharacteriseSoilBinary {"spectra"};
 
     /* ------------------------------ Geant4 Setup ------------------------------ */
 
@@ -31,9 +38,13 @@ int main(int argc, char** argv) {
 
     auto runManager =
         G4RunManagerFactory::CreateRunManager(G4RunManagerType::SerialOnly);
-    runManager->SetUserInitialization(new DetectorConstruction(soil));
-    runManager->SetUserInitialization(new GCPhysicsList(true));
-    runManager->SetUserInitialization(new ActionInitialization(config));
+    runManager->SetUserInitialization(
+        new DetectorConstruction(soilConfig, gcConfig)
+    );
+    runManager->SetUserInitialization(new GCPhysicsList());
+    runManager->SetUserInitialization(
+        new ActionInitialization(soilConfig, gcConfig, 1000)
+    );
 
     auto visManager = new G4VisExecutive(argc, argv);
     visManager->Initialize();

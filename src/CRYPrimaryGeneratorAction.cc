@@ -1,9 +1,14 @@
 #include "CRYPrimaryGeneratorAction.hh"
 
+#include <fstream>
+#include <CRYSetup.h>
+#include <CLHEP/Random/Random.h>
+
 #include <G4Event.hh>
 #include <G4SystemOfUnits.hh>
 
 #include "GCConstants.hh"
+#include "RNGWrapper.hh"
 
 //----------------------------------------------------------------------------//
 CRYPrimaryGeneratorAction::CRYPrimaryGeneratorAction(const char* inputfile) {
@@ -106,11 +111,10 @@ void CRYPrimaryGeneratorAction::CRYFromFile(G4String newValue) {
 }
 
 //----------------------------------------------------------------------------//
-void CRYPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
+void CRYPrimaryGeneratorAction::GeneratePrimaries(G4Event* ev) {
     if (InputState != 0) {
         G4String* str =
             new G4String("CRY library was not successfully initialized");
-        //G4Exception(*str);
         G4Exception("PrimaryGeneratorAction", "1", RunMustBeAborted, *str);
     }
     G4String particleName;
@@ -133,7 +137,11 @@ void CRYPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
             G4ThreeVector((*vect)[j]->u(), (*vect)[j]->v(), (*vect)[j]->w())
         );
         particleGun->SetParticleTime((*vect)[j]->t());
-        particleGun->GeneratePrimaryVertex(anEvent);
+        particleGun->GeneratePrimaryVertex(ev);
         delete (*vect)[j];
     }
+}
+
+double CRYPrimaryGeneratorAction::GetExposureTime() {
+    return gen->timeSimulated();
 }

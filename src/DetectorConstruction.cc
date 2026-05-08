@@ -1,24 +1,32 @@
 #include "DetectorConstruction.hh"
 
+#include <CLHEP/Units/SystemOfUnits.h>
+
 #include <G4Box.hh>
 #include <G4LogicalVolume.hh>
 #include <G4NistManager.hh>
 #include <G4PVPlacement.hh>
 #include <G4SDManager.hh>
 #include <G4SystemOfUnits.hh>
+#include <G4ThreeVector.hh>
+#include <G4Tubs.hh>
 #include <G4VisAttributes.hh>
+#include <G4ios.hh>
 #include <cmath>
+#include <variant>
 
-#include "GCConfig.hh"
+#include "Configs.hh"
+#include "SensitiveDetector.hh"
 
-DetectorConstruction::DetectorConstruction(SoilConfig config) :
+DetectorConstruction::DetectorConstruction(SoilConfig soil, GCConfig gcConfig) :
     G4VUserDetectorConstruction(),
-    soilLogicalLayers(config.numSoilLayers, nullptr),
-    soilCarbonPercentage {config.soilCarbonPercentage},
-    numSoilLayers {config.numSoilLayers},
-    surfaceBias {config.surfaceBias},
-    soilDepth {config.soilDepth},
-    soilWidth {config.soilWidth} {}
+    soilLogicalLayers(soil.soilCarbonSubdivisions, nullptr),
+    soilCarbonPercentage {soil.soilCarbonPercentage},
+    soilCarbonSubdivisions {soil.soilCarbonSubdivisions},
+    soilDepth {soil.soilDepth},
+    soilWidth {soil.soilWidth},
+    config {gcConfig},
+    logicalDetector(nullptr) {}
 
 DetectorConstruction::~DetectorConstruction() {}
 
@@ -45,6 +53,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
     G4Material* air = nist->FindOrBuildMaterial("G4_AIR");
     G4Material* water = nist->FindOrBuildMaterial("G4_WATER");
+    G4Material* germanium = nist->FindOrBuildMaterial("G4_Ge");
     G4Material* soilOrganicCarbon =
         new G4Material("soilOrganicCarbon", 1.2 * g / cm3, 6);
     soilOrganicCarbon->AddElement(elC, 0.58);
@@ -110,20 +119,23 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     G4double waterVolumeFraction = 0.25;
     G4double k = 0.02349 / cm;
 
-    // Layering parameters
-    G4double growth =
-        std::pow(1.0 + soilDepth / surfaceBias, 1.0 / numSoilLayers);
-
     // Construct layers
     G4double zTop = 0.0;
-    for (int i = 0; i < numSoilLayers; i++) {
-        G4double zBottom = -(std::pow(growth, i + 1) - 1) * surfaceBias;
-        if (i == numSoilLayers - 1) {
+    G4double reachedBottom = false;
+    for (int i = 0; i < soilCarbonSubdivisions; i++) {
+        G4double zBottom =
+            std::log(1.0 - (double)(i + 1) / soilCarbonSubdivisions) / k;
+
+        if (zBottom < -soilDepth) {
+            zBottom = -soilDepth;
+            reachedBottom = true;
+        }
+        if (i == soilCarbonSubdivisions - 1) {
             zBottom = -soilDepth;
         }
 
         G4double carbonVolumeFraction =
-            soilCarbonPercentage * std::exp(k * zTop);
+            soilCarbonPercentage * std::exp(k * zBottom);
         G4double mineralVolumeFraction = 1.0 - airVolumeFraction
             - waterVolumeFraction - carbonVolumeFraction;
 
@@ -208,9 +220,44 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
         );
 
         zTop = zBottom;
+        if (reachedBottom)
+            break;
+    }
+
+    /* -------------------------- Germanium Detector -------------------------- */
+
+    if (std::holds_alternative<ReplayEmissions>(config)) {
+        G4Tubs* detectorCylinder = new G4Tubs(
+            "SolidDetector",
+            0.0,
+            8.3 * cm,
+            16.8 * cm,
+            0.0,
+            CLHEP::twopi
+        );
+
+        logicalDetector =
+            new G4LogicalVolume(detectorCylinder, germanium, "LogicalDetector");
+
+        new G4PVPlacement(
+            nullptr,
+            G4ThreeVector(0.0, 0.0, 20 * cm + 16.8 * cm / 2.0),
+            "PhysicalDetector",
+            logicalDetector,
+            physWorld,
+            false,
+            0,
+            true
+        );
     }
 
     return physWorld;
 }
 
-void DetectorConstruction::ConstructSDandField() {}
+void DetectorConstruction::ConstructSDandField() {
+    if (std::holds_alternative<ReplayEmissions>(config)) {
+        SensitiveDetector* sd = new SensitiveDetector("MeasurementSD");
+        G4SDManager::GetSDMpointer()->AddNewDetector(sd);
+        logicalDetector->SetSensitiveDetector(sd);
+    }
+}

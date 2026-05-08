@@ -2,13 +2,17 @@
 
 #include <G4VUserActionInitialization.hh>
 
-#include "GCConfig.hh"
+#include "Configs.hh"
 
 class G4GeneralParticleSource;
 
 class ActionInitialization: public G4VUserActionInitialization {
   public:
-    ActionInitialization(GCConfig mode);
+    ActionInitialization(
+        SoilConfig soil,
+        GCConfig mode,
+        int updatePeriod = 1000
+    );
     virtual ~ActionInitialization();
 
     virtual void BuildForMaster() const;
@@ -16,4 +20,6 @@ class ActionInitialization: public G4VUserActionInitialization {
 
   private:
     GCConfig config;
+    SoilConfig soil;
+    int updatePeriod;
 };

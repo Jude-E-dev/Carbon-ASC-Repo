@@ -67,7 +67,8 @@ target_link_libraries(groundCarbon ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ${CRY_L
 #
 set(GROUNDCARBON_SCRIPTS
   macros/init_vis.mac
-  macros/basic_run.mac
+  macros/characterise.mac
+  macros/replay.mac
   macros/vis.mac
   setupCry.file
 )
@@ -93,4 +94,4 @@ install(TARGETS groundCarbon DESTINATION bin)
 
 #-------------------------------- For clangd --------------------------------
 #
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)

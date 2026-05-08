@@ -3,15 +3,23 @@
 #include <G4SystemOfUnits.hh>
 
 #include "CRYPrimaryGeneratorAction.hh"
+#include "Configs.hh"
 #include "EventAction.hh"
 #include "ReplayPrimaryGeneratorAction.hh"
 #include "RunAction.hh"
 #include "SteppingAction.hh"
+#include "TrackingAction.hh"
 #include "overloaded.hh"
 
-ActionInitialization::ActionInitialization(GCConfig config) :
+ActionInitialization::ActionInitialization(
+    SoilConfig soil,
+    GCConfig config,
+    int updatePeriod
+) :
     G4VUserActionInitialization(),
-    config {config} {}
+    config {config},
+    soil {soil},
+    updatePeriod {updatePeriod} {}
 
 ActionInitialization::~ActionInitialization() {}
 
@@ -22,19 +30,23 @@ void ActionInitialization::BuildForMaster() const {
 
 void ActionInitialization::Build() const {
     auto* runAction = new RunAction(config);
+    auto* eventAction = new EventAction(runAction, config, updatePeriod);
     SetUserAction(runAction);
-    SetUserAction(new EventAction(runAction, config));
+    SetUserAction(eventAction);
+
+    
 
     std::visit(
         overloaded {
             [this](const ReplayEmissions& conf) {
                 SetUserAction(
-                    new ReplayPrimaryGeneratorAction(conf.spectraPath, 50 * m)
+                    new ReplayPrimaryGeneratorAction(conf.spectraPath, soil)
                 );
             },
-            [this](auto const&) {
+            [this, eventAction](auto const&) {
                 SetUserAction(new CRYPrimaryGeneratorAction("setupCry.file"));
-                SetUserAction(new SteppingAction(config));
+                SetUserAction(new SteppingAction(config, eventAction));
+                SetUserAction(new TrackingAction(eventAction));
             },
         },
         config

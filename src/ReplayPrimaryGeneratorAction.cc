@@ -4,20 +4,25 @@
 #include <G4ParticleGun.hh>
 #include <G4ParticleMomentum.hh>
 #include <G4ParticleTable.hh>
+#include <G4RunManager.hh>
+#include <G4ios.hh>
 #include <cmath>
 #include <cstdlib>
 
+#include "Configs.hh"
+#include "EventAction.hh"
 #include "GCConstants.hh"
 
 ReplayPrimaryGeneratorAction::ReplayPrimaryGeneratorAction(
     const std::string& distributionPath,
-    double soilWidth
+    SoilConfig soil
 ) :
     gun(0),
     binFile(distributionPath, std::ios::binary | std::ios::in),
     rng(std::random_device {}()),
     azimuthDist(0.0, 2.0 * M_PI),
-    positionDist(-soilWidth / 2.0, soilWidth / 2.0) {
+    positionDist(0.0, 1.0),
+    soil {soil} {
     if (!binFile) {
         G4cerr << "Unable to open distribution file: " << distributionPath
                << G4endl;
@@ -38,21 +43,34 @@ ReplayPrimaryGeneratorAction::~ReplayPrimaryGeneratorAction() {
 void ReplayPrimaryGeneratorAction::GeneratePrimaries(G4Event* ev) {
     if (binFile) {
         double energy, pz, z;
-        G4cout << "Reader at: " << binFile.tellg() << G4endl;
-        binFile.read(reinterpret_cast<char*>(&energy), sizeof(double));
-        binFile.read(reinterpret_cast<char*>(&pz), sizeof(double));
-        binFile.read(reinterpret_cast<char*>(&z), sizeof(double));
+        int sourcePDG;
+        bool wasEOF = false;
+        do {
+            binFile.read(reinterpret_cast<char*>(&energy), sizeof(double));
+            binFile.read(reinterpret_cast<char*>(&pz), sizeof(double));
+            binFile.read(reinterpret_cast<char*>(&z), sizeof(double));
+            binFile.read(reinterpret_cast<char*>(&sourcePDG), sizeof(int));
+            wasEOF = binFile.eof();
+            if (wasEOF) {
+                binFile.clear();
+                binFile.seekg(0, std::ios::beg);
+                G4cout << "Reached end of replay .bin file. Looping to beginning." << G4endl;
+            }
+        } while (z < -soil.soilDepth || wasEOF);
+        
+        // Uniform distribution on a disk
+        G4double rho = soil.soilWidth / 2.0 * std::sqrt(positionDist(rng));
+        G4double theta = azimuthDist(rng);
+        G4double x = rho * std::cos(theta);
+        G4double y = rho * std::sin(theta);
 
-        G4cout << "Generating particle: E = " << energy << "MeV, p_z = " << pz
-               << ", z = " << z << "mm." << G4endl;
+        auto* eventAction = (EventAction*)(G4RunManager::GetRunManager()->GetUserEventAction());
+        eventAction->SetSourceProperties(z, std::sqrt(x*x + y*y), energy, sourcePDG);
 
-        G4double x = positionDist(rng);
-        G4double y = positionDist(rng);
-
-        G4double phi = azimuthDist(rng);
+        G4double pPhi = azimuthDist(rng);
         G4double pr = std::sqrt(1.0 - pz * pz);
-        G4double px = pr * std::cos(phi);
-        G4double py = pr * std::sin(phi);
+        G4double px = pr * std::cos(pPhi);
+        G4double py = pr * std::sin(pPhi);
 
         gun->SetParticleDefinition(particleTable->FindParticle(GAMMA_PDG));
         gun->SetParticleEnergy(energy);

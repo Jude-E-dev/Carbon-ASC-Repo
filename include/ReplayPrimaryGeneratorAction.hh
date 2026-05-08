@@ -4,6 +4,8 @@
 #include <fstream>
 #include <random>
 
+#include "Configs.hh"
+
 class G4Event;
 class G4ParticleTable;
 class G4ParticleGun;
@@ -12,7 +14,7 @@ class ReplayPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction {
   public:
     ReplayPrimaryGeneratorAction(
         const std::string& distributionPath,
-        double soilWidth
+        SoilConfig soil
     );
     ~ReplayPrimaryGeneratorAction();
 
@@ -20,6 +22,7 @@ class ReplayPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction {
     void GeneratePrimaries(G4Event* anEvent);
 
   private:
+    SoilConfig soil;
     G4ParticleTable* particleTable;
     G4ParticleGun* gun;
     std::ifstream binFile;
