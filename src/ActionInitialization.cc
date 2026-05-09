@@ -1,14 +1,16 @@
 #include "ActionInitialization.hh"
 
 #include <G4SystemOfUnits.hh>
+#include <G4Threading.hh>
 
 #include "CRYPrimaryGeneratorAction.hh"
 #include "Configs.hh"
+#include "DetectionPrimaryGeneratorAction.hh"
 #include "EventAction.hh"
-#include "ReplayPrimaryGeneratorAction.hh"
 #include "RunAction.hh"
 #include "SteppingAction.hh"
 #include "TrackingAction.hh"
+#include "TransportPrimaryGeneratorAction.hh"
 #include "overloaded.hh"
 
 ActionInitialization::ActionInitialization(
@@ -32,20 +34,24 @@ void ActionInitialization::Build() const {
     auto* runAction = new RunAction(config);
     SetUserAction(runAction);
     SetUserAction(new EventAction(runAction, config, updatePeriod));
+    SetUserAction(new SteppingAction(config));
 
-    std::visit(
-        overloaded {
-            [this](const ReplayEmissions& conf) {
-                SetUserAction(
-                    new ReplayPrimaryGeneratorAction(conf.spectraPath, soil)
-                );
-            },
-            [this](auto const&) {
-                SetUserAction(new CRYPrimaryGeneratorAction("setupCry.file"));
-                SetUserAction(new SteppingAction(config));
-                SetUserAction(new TrackingAction());
-            },
+    auto visitor = overloaded {
+        [this](const CharacteriseSoilGammas& conf) {
+            SetUserAction(new CRYPrimaryGeneratorAction("setupCry.file"));
+            SetUserAction(new TrackingAction());
         },
-        config
-    );
+        [this](const TransportGammas& conf) {
+            SetUserAction(
+                new TransportPrimaryGeneratorAction(conf.spectraPath, soil)
+            );
+        },
+        [this](const Detect& conf) {
+            SetUserAction(
+                new DetectionPrimaryGeneratorAction(conf.spectraPath)
+            );
+        },
+    };
+
+    std::visit(visitor, config);
 }

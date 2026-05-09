@@ -106,6 +106,36 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
         true
     );
 
+    /* -------------------------- Germanium Detector -------------------------- */
+
+    if (!std::holds_alternative<CharacteriseSoilGammas>(config)) {
+        G4Tubs* detectorCylinder = new G4Tubs(
+            "SolidDetector",
+            0.0,
+            8.3 * cm,
+            16.8 * cm,
+            0.0,
+            CLHEP::twopi
+        );
+
+        logicalDetector =
+            new G4LogicalVolume(detectorCylinder, germanium, "LogicalDetector");
+
+        new G4PVPlacement(
+            nullptr,
+            G4ThreeVector(0.0, 0.0, 20 * cm + 16.8 * cm / 2.0),
+            "PhysicalDetector",
+            logicalDetector,
+            physWorld,
+            false,
+            0,
+            true
+        );
+    }
+
+    if (std::holds_alternative<Detect>(config))
+        return physWorld;
+
     /* ------------------------------ Soil Volumes ------------------------------ */
     /* -------------- https://www.desmos.com/calculator/tcl1fcxpzj -------------- */
 
@@ -224,38 +254,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
             break;
     }
 
-    /* -------------------------- Germanium Detector -------------------------- */
-
-    if (std::holds_alternative<ReplayEmissions>(config)) {
-        G4Tubs* detectorCylinder = new G4Tubs(
-            "SolidDetector",
-            0.0,
-            8.3 * cm,
-            16.8 * cm,
-            0.0,
-            CLHEP::twopi
-        );
-
-        logicalDetector =
-            new G4LogicalVolume(detectorCylinder, germanium, "LogicalDetector");
-
-        new G4PVPlacement(
-            nullptr,
-            G4ThreeVector(0.0, 0.0, 20 * cm + 16.8 * cm / 2.0),
-            "PhysicalDetector",
-            logicalDetector,
-            physWorld,
-            false,
-            0,
-            true
-        );
-    }
-
     return physWorld;
 }
 
 void DetectorConstruction::ConstructSDandField() {
-    if (std::holds_alternative<ReplayEmissions>(config)) {
+    if (std::holds_alternative<Detect>(config)) {
         SensitiveDetector* sd = new SensitiveDetector("MeasurementSD");
         G4SDManager::GetSDMpointer()->AddNewDetector(sd);
         logicalDetector->SetSensitiveDetector(sd);

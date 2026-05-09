@@ -68,7 +68,7 @@ target_link_libraries(groundCarbon ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ${CRY_L
 set(GROUNDCARBON_SCRIPTS
   macros/init_vis.mac
   macros/characterise.mac
-  macros/replay.mac
+  macros/transport.mac
   macros/vis.mac
   setupCry.file
 )

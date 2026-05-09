@@ -19,16 +19,28 @@ class EventAction: public G4UserEventAction {
     virtual void EndOfEventAction(const G4Event* event);
 
     void RegisterPrimary(int trackID, std::string primaryName, int pdg);
-    std::string GetPrimaryName(const G4Track* track);
-    int GetPrimaryPDG(const G4Track* track);
+    std::string GetPrimaryName(const G4Track* track) const;
+    int GetPrimaryPDG(const G4Track* track) const;
 
-    void SetSourceProperties(double depth, double radius, double energy, int pdg);
-    double GetSourceDepth();
-    double GetSourceRadius();
-    double GetSourceEnergy();
-    int GetSourcePDG();
+    void SetSoilSourceProperties(double z, double rho, double energy, int pdg);
+    double GetSoilSourceZ() const;
+    double GetSoilSourceRho() const;
+    double GetSoilSourceEnergy() const;
+    int GetSoilSourcePDG() const;
+
+    void SetDetectionProperties(
+        double energyInSoil,
+        int sourcePDG,
+        double zInSoil,
+        double rhoInSoil
+    );
+    double GetDetectionStartingEnergyInSoil() const;
+    int GetDetectionSourcePDG() const;
+    double GetDetectionSoilZ() const;
+    double GetDetectionSoilRho() const;
+
     void DepositEnergy(double eDep);
-    double GetPulseEnergy();
+    double GetDetectionPulseEnergy() const;
 
   private:
     RunAction* fRunAction;
@@ -37,10 +49,16 @@ class EventAction: public G4UserEventAction {
     std::unordered_map<int, std::string> primariesMap;
     std::unordered_map<int, int> pdgsMap;
 
-    // Only used in GCConfig::Replay
-    double sourceDepth = 0.0;
-    double sourceRadius = 0.0;
-    double sourceEnergy = 0.0;
-    int sourcePDG = 0;
-    double pulseEnergy = 0.0;
+    // Only used in GCConfig::Transport
+    double soilSourceZ = 0.0;
+    double soilSourceRho = 0.0;
+    double soilSourceEnergy = 0.0;
+    int soilSourcePDG = 0;
+
+    // Only used in GCConfig::Detect
+    double detectionEnergyInSoil = 0.0;
+    int detectionSourcePDG = 0;
+    double detectionZInSoil = 0.0;
+    double detectionRhoInSoil = 0.0;
+    double detectionPulseEnergy = 0.0;
 };

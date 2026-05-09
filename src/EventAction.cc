@@ -10,8 +10,8 @@
 #include <variant>
 
 #include "Configs.hh"
-#include "ReplayPrimaryGeneratorAction.hh"
 #include "RunAction.hh"
+#include "TransportPrimaryGeneratorAction.hh"
 
 EventAction::EventAction(
     RunAction* runAction,
@@ -34,32 +34,28 @@ void EventAction::BeginOfEventAction(const G4Event* ev) {
 void EventAction::EndOfEventAction(const G4Event* ev) {
     G4int n = ev->GetEventID();
     if (n % updatePeriod == 0) {
-        G4cout << "\n"
-               << ev->GetEventID() / 1000 << "k events completed."
-               << std::flush;
-        if (std::holds_alternative<ReplayEmissions>(config)) {
-            auto* replayGenerator =
-                (ReplayPrimaryGeneratorAction*)G4RunManager::GetRunManager()
-                    ->GetUserPrimaryGeneratorAction();
-            G4cout << "Exposed: " << replayGenerator->GetExposureTime() << "s" << G4endl;
-        }
+        G4cout << ev->GetEventID() / 1000 << "k events completed." << G4endl;
     }
 
-    if (std::holds_alternative<ReplayEmissions>(config)) {
+    if (std::holds_alternative<Detect>(config)) {
         auto analysisManager = G4AnalysisManager::Instance();
         int i = 0;
-        if (GetPulseEnergy() > 0.001) {
-            analysisManager->FillNtupleDColumn(1, i++, GetPulseEnergy());
-            analysisManager->FillNtupleDColumn(1, i++, GetSourceDepth());
-            analysisManager->FillNtupleDColumn(1, i++, GetSourceRadius());
-            analysisManager->FillNtupleDColumn(1, i++, GetSourceEnergy());
-            analysisManager->FillNtupleIColumn(1, i++, GetSourcePDG());
-            analysisManager->AddNtupleRow(1);
+        if (GetDetectionPulseEnergy() > 0.001) {
+            analysisManager->FillNtupleDColumn(i++, GetDetectionPulseEnergy());
+            analysisManager->FillNtupleDColumn(
+                i++,
+                GetDetectionStartingEnergyInSoil()
+            );
+            analysisManager->FillNtupleIColumn(i++, GetDetectionSourcePDG());
+            analysisManager->FillNtupleDColumn(i++, GetDetectionSoilZ());
+            analysisManager->FillNtupleDColumn(i++, GetDetectionSoilRho());
+            analysisManager->AddNtupleRow();
         }
     }
 
-    SetSourceProperties(0.0, 0.0, 0.0, 0);
-    pulseEnergy = 0.0;
+    SetSoilSourceProperties(0.0, 0.0, 0.0, 0);
+    SetDetectionProperties(0.0, 0, 0.0, 0.0);
+    detectionPulseEnergy = 0.0;
 }
 
 void EventAction::RegisterPrimary(
@@ -71,7 +67,7 @@ void EventAction::RegisterPrimary(
     pdgsMap[trackID] = pdg;
 }
 
-std::string EventAction::GetPrimaryName(const G4Track* track) {
+std::string EventAction::GetPrimaryName(const G4Track* track) const {
     std::string primary;
     try {
         primary = primariesMap.at(track->GetParentID());
@@ -81,7 +77,7 @@ std::string EventAction::GetPrimaryName(const G4Track* track) {
     return primary;
 }
 
-int EventAction::GetPrimaryPDG(const G4Track* track) {
+int EventAction::GetPrimaryPDG(const G4Track* track) const {
     int primary;
     try {
         primary = pdgsMap.at(track->GetParentID());
@@ -91,38 +87,66 @@ int EventAction::GetPrimaryPDG(const G4Track* track) {
     return primary;
 }
 
-void EventAction::SetSourceProperties(
-    double depth,
-    double radius,
+void EventAction::SetSoilSourceProperties(
+    double z,
+    double rho,
     double energy,
     int pdg
 ) {
-    sourceDepth = depth;
-    sourceRadius = radius;
-    sourceEnergy = energy;
-    sourcePDG = pdg;
+    soilSourceZ = z;
+    soilSourceRho = rho;
+    soilSourceEnergy = energy;
+    soilSourcePDG = pdg;
 }
 
-double EventAction::GetSourceDepth() {
-    return sourceDepth;
+void EventAction::SetDetectionProperties(
+    double energyInSoil,
+    int sourcePDG,
+    double zInSoil,
+    double rhoInSoil
+) {
+    detectionEnergyInSoil = energyInSoil;
+    detectionSourcePDG = sourcePDG;
+    detectionZInSoil = zInSoil;
+    detectionRhoInSoil = rhoInSoil;
 }
 
-double EventAction::GetSourceRadius() {
-    return sourceRadius;
+double EventAction::GetSoilSourceZ() const {
+    return soilSourceZ;
 }
 
-double EventAction::GetSourceEnergy() {
-    return sourceEnergy;
+double EventAction::GetSoilSourceRho() const {
+    return soilSourceRho;
 }
 
-int EventAction::GetSourcePDG() {
-    return sourcePDG;
+double EventAction::GetSoilSourceEnergy() const {
+    return soilSourceEnergy;
+}
+
+int EventAction::GetSoilSourcePDG() const {
+    return soilSourcePDG;
 }
 
 void EventAction::DepositEnergy(double eDep) {
-    pulseEnergy += eDep;
+    detectionPulseEnergy += eDep;
 }
 
-double EventAction::GetPulseEnergy() {
-    return pulseEnergy;
+double EventAction::GetDetectionPulseEnergy() const {
+    return detectionPulseEnergy;
+}
+
+double EventAction::GetDetectionStartingEnergyInSoil() const {
+    return detectionEnergyInSoil;
+}
+
+int EventAction::GetDetectionSourcePDG() const {
+    return detectionSourcePDG;
+}
+
+double EventAction::GetDetectionSoilZ() const {
+    return detectionZInSoil;
+}
+
+double EventAction::GetDetectionSoilRho() const {
+    return detectionRhoInSoil;
 }

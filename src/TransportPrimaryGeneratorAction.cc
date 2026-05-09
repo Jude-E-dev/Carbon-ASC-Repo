@@ -1,4 +1,4 @@
-#include "ReplayPrimaryGeneratorAction.hh"
+#include "TransportPrimaryGeneratorAction.hh"
 
 #include <G4Event.hh>
 #include <G4ParticleGun.hh>
@@ -14,7 +14,7 @@
 #include "GCConstants.hh"
 #include "RunAction.hh"
 
-ReplayPrimaryGeneratorAction::ReplayPrimaryGeneratorAction(
+TransportPrimaryGeneratorAction::TransportPrimaryGeneratorAction(
     const std::string& distributionPath,
     SoilConfig soil
 ) :
@@ -31,7 +31,7 @@ ReplayPrimaryGeneratorAction::ReplayPrimaryGeneratorAction(
         std::exit(EXIT_FAILURE);
     }
 
-    binFileNumEvents = (static_cast<long>(binFile.tellg()) - 1)
+    binFileNumEvents = (static_cast<long>(binFile.tellg()) - sizeof(double))
         / (3 * sizeof(double) + sizeof(int));
     binFile.seekg(0, std::ios::beg);
     binFile.read(reinterpret_cast<char*>(&binFileExposure), sizeof(double));
@@ -43,14 +43,14 @@ ReplayPrimaryGeneratorAction::ReplayPrimaryGeneratorAction(
     gun = new G4ParticleGun();
 }
 
-ReplayPrimaryGeneratorAction::~ReplayPrimaryGeneratorAction() {
+TransportPrimaryGeneratorAction::~TransportPrimaryGeneratorAction() {
     if (binFile) {
         binFile.close();
     }
     delete gun;
 }
 
-void ReplayPrimaryGeneratorAction::GeneratePrimaries(G4Event* ev) {
+void TransportPrimaryGeneratorAction::GeneratePrimaries(G4Event* ev) {
     if (binFile) {
         auto* runManager = G4RunManager::GetRunManager();
         auto* eventAction = (EventAction*)runManager->GetUserEventAction();
@@ -80,13 +80,13 @@ void ReplayPrimaryGeneratorAction::GeneratePrimaries(G4Event* ev) {
         G4double x = rho * std::cos(theta);
         G4double y = rho * std::sin(theta);
 
-        eventAction->SetSourceProperties(
+        eventAction->SetSoilSourceProperties(
             z,
             std::sqrt(x * x + y * y),
             energy,
             sourcePDG
         );
-        runAction->IncrementReplayExposure(binFileExposure);
+        runAction->IncrementTransportExposure(binFileExposure);
 
         G4double pPhi = azimuthDist(rng);
         G4double pr = std::sqrt(1.0 - pz * pz);
@@ -104,6 +104,6 @@ void ReplayPrimaryGeneratorAction::GeneratePrimaries(G4Event* ev) {
     }
 }
 
-double ReplayPrimaryGeneratorAction::GetExposureTime() {
+double TransportPrimaryGeneratorAction::GetExposureTime() {
     return binFileExposure * ((double)eventsProcessed / binFileNumEvents);
 }

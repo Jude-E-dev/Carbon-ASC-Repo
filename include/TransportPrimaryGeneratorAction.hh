@@ -10,13 +10,13 @@ class G4Event;
 class G4ParticleTable;
 class G4ParticleGun;
 
-class ReplayPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction {
+class TransportPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction {
   public:
-    ReplayPrimaryGeneratorAction(
+    TransportPrimaryGeneratorAction(
         const std::string& distributionPath,
         SoilConfig soil
     );
-    ~ReplayPrimaryGeneratorAction();
+    ~TransportPrimaryGeneratorAction();
 
   public:
     void GeneratePrimaries(G4Event* anEvent);

@@ -16,14 +16,21 @@
 
 int invalidArguments() {
     G4cerr
-        << "Usage: ./groundCarbon [(character-debug)|(character-bin)|(replay <spectrum.bin>)] <macro.mac (optional)>\n"
-        << "  E.g., ./groundCarbon character-debug characterise.mac\n"
-        << "Or: ./groundCarbon merge-spectra <output_path.bin> spectrum1.bin spectrum2.bin ...\n"
-        << "Note: if no macro is given, Geant4 will launch a GUI." << G4endl;
+        << "Usage: ./groundCarbon [soil-character|transport|detect] [info|binary|all] <path.bin (transport/detect only)> <run count (optional)>\n"
+        << "Or: ./groundCarbon merge <output_path.bin> output1.bin output2.bin ...\n"
+        << "Note: if no run count is given, Geant4 will launch a GUI.\n"
+        << "Note: choosing \'info\' will output a csv, \'binary\' will output a binary file.\n\n"
+        << "An example of how to use this:\n"
+        << "mpirun -n 5 ./groundCarbon soil-character binary 1000000\n"
+        << "./groundCarbon merge soil-character/soil.bin soil-character/*.bin"
+        << "mpirun -n 5 ./groundCarbon transport all soil-character/soil.bin 10000000"
+        << "./groundCarbon merge transport/predetection.bin transport/*.bin"
+        << "./groundCarbon detect info transport/predetection.bin 10000000"
+        << G4endl;
     return 1;
 }
 
-void mergeSpectra(std::vector<std::string> args);
+void mergeBinaries(std::vector<std::string> args);
 
 int main(int argc, char* argv[]) {
     std::vector<std::string> args(argv, argv + argc);
@@ -36,32 +43,49 @@ int main(int argc, char* argv[]) {
         return invalidArguments();
     }
 
-    std::string macro = "";
-    int updatePeriod = 1000;
+    if (args[1] == "merge") {
+        mergeBinaries(args);
+        return 0;
+    }
 
     auto soilConfig = SoilConfig {0.15, 16, 50 * cm, 5 * m}; // smaller volume
+    std::string num_runs = "";
+    int updatePeriod = 1000;
+    OutputTypes outputTypes;
+    if (args[2] == "info") {
+        outputTypes = OutputTypes::INFO;
+    } else if (args[2] == "binary") {
+        outputTypes = OutputTypes::BINARY;
+    } else if (args[2] == "all") {
+        outputTypes = OutputTypes::ALL;
+    } else {
+        return invalidArguments();
+    }
+
     GCConfig gcConfig;
-    if (args[1] == "character-debug") {
-        gcConfig = CharacteriseSoilDebug {"csv", "character"};
-        if (args.size() == 3) {
-            macro = args[2];
-        }
-    } else if (args[1] == "character-bin") {
-        gcConfig = CharacteriseSoilBinary {"spectra"};
-        if (args.size() == 3) {
-            macro = args[2];
-        }
-    } else if (args[1] == "replay") {
-        updatePeriod = 50000;
-        if (args.size() < 3)
-            return invalidArguments();
-        gcConfig = ReplayEmissions {args[2], "csv", "replay"};
+    if (args[1] == "soil-character") {
+        gcConfig =
+            CharacteriseSoilGammas {"csv", "soil-character", outputTypes};
         if (args.size() == 4) {
-            macro = args[3];
+            num_runs = args[3];
         }
-    } else if (args[1] == "merge-spectra") {
-        mergeSpectra(args);
-        return 0;
+    } else if (args[1] == "transport") {
+        updatePeriod = 50000;
+        G4cout << "args: " << args.size() << G4endl;
+        if (args.size() < 4)
+            return invalidArguments();
+        gcConfig = TransportGammas {args[3], "csv", "transport", outputTypes};
+        if (args.size() == 5) {
+            num_runs = args[4];
+        }
+    } else if (args[1] == "detect") {
+        updatePeriod = 50000;
+        if (args.size() < 4)
+            return invalidArguments();
+        gcConfig = Detect {args[3], "csv", "detector", outputTypes};
+        if (args.size() == 5) {
+            num_runs = args[4];
+        }
     } else {
         return invalidArguments();
     }
@@ -69,7 +93,7 @@ int main(int argc, char* argv[]) {
     /* ------------------------------ Geant4 Setup ------------------------------ */
 
     G4UIExecutive* ui = nullptr;
-    if (macro == "") {
+    if (num_runs == "") {
         ui = new G4UIExecutive(argc, argv);
     }
 
@@ -95,7 +119,8 @@ int main(int argc, char* argv[]) {
 
     if (!ui) {
         // batch mode
-        UImanager->ApplyCommand("/control/execute " + macro);
+        UImanager->ApplyCommand("/run/initialize ");
+        UImanager->ApplyCommand("/run/beamOn " + num_runs);
     } else {
         // interactive mode
         UImanager->ApplyCommand("/control/execute init_vis.mac");
@@ -107,7 +132,7 @@ int main(int argc, char* argv[]) {
     delete runManager;
 }
 
-void mergeSpectra(std::vector<std::string> args) {
+void mergeBinaries(std::vector<std::string> args) {
     // Calculate total exposure
     double totalExposure = 0.0;
     for (int i = 3; i < args.size(); i++) {
