@@ -2,12 +2,12 @@
 
 #include "G4VModularPhysicsList.hh"
 
-class GCPhysicsList: public G4VModularPhysicsList {
+class GCPhysicsList: public G4VModularPhysicsList
+{
   public:
     GCPhysicsList(G4int ver = 1);
     virtual ~GCPhysicsList() = default;
 
-    // delete copy constructor and assignment operator
     GCPhysicsList(const GCPhysicsList&) = delete;
     GCPhysicsList& operator=(const GCPhysicsList& right) = delete;
 };

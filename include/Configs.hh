@@ -1,13 +1,16 @@
 #pragma once
 
+#include <G4String.hh>
+#include <G4Types.hh>
+#include <cstddef>
 #include <string>
 #include <variant>
 
 struct SoilConfig {
-    double soilCarbonPercentage;
-    int soilCarbonSubdivisions;
-    double soilDepth;
-    double soilWidth;
+    G4double soilCarbonPercentage;
+    std::size_t soilCarbonSubdivisions;
+    G4double soilDepth;
+    G4double soilWidth;
 };
 
 enum class OutputTypes { INFO, BINARY, ALL };

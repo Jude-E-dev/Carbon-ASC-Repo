@@ -17,9 +17,10 @@
 #include "RunAction.hh"
 #include "overloaded.hh"
 
-SteppingAction::SteppingAction(GCConfig config) : config {config} {}
+SteppingAction::SteppingAction(const GCConfig& config) : config {config} {}
 
-void SteppingAction::UserSteppingAction(const G4Step* step) {
+void SteppingAction::UserSteppingAction(const G4Step* step)
+{
     auto visitor = overloaded {
         [step](const CharacteriseSoilGammas& conf) {
             G4Track* track = step->GetTrack();
@@ -29,7 +30,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
             if (!creator)
                 return;
 
-            G4int stepNum = track->GetCurrentStepNumber();
+            const G4int stepNum = track->GetCurrentStepNumber();
             const G4ParticleDefinition* particleDef =
                 track->GetParticleDefinition();
 
@@ -37,17 +38,18 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
             if (particleDef->GetPDGEncoding() != GAMMA_PDG || stepNum != 1)
                 return;
 
-            G4StepPoint* point = step->GetPreStepPoint();
-            G4ThreeVector pos = point->GetPosition();
+            const G4StepPoint* point = step->GetPreStepPoint();
+            const G4ThreeVector pos = point->GetPosition();
 
             if (pos.getZ() > 0.0)
                 return;
 
             auto analysisManager = G4AnalysisManager::Instance();
-            auto* runManager = G4RunManager::GetRunManager();
-            auto* eventAction = (EventAction*)runManager->GetUserEventAction();
-            G4double energy = point->GetKineticEnergy();
-            G4ThreeVector momentumDir = point->GetMomentumDirection();
+            const auto* runManager = G4RunManager::GetRunManager();
+            const auto* eventAction =
+                (EventAction*)runManager->GetUserEventAction();
+            const G4double energy = point->GetKineticEnergy();
+            const G4ThreeVector momentumDir = point->GetMomentumDirection();
 
             // Skip low energy emissions
             if (energy < 0.3 * MeV)
@@ -124,14 +126,14 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
             const auto pos = pre->GetPosition();
             const auto momentum = pre->GetMomentumDirection();
             const auto* particleDef = track->GetParticleDefinition();
-            const double energy = pre->GetKineticEnergy();
+            const G4double energy = pre->GetKineticEnergy();
 
             // For csv file
             if (conf.outputTypes == OutputTypes::INFO
                 || conf.outputTypes == OutputTypes::ALL) {
                 auto* analysisManager = G4AnalysisManager::Instance();
 
-                int i = 0;
+                G4int i = 0;
                 analysisManager->FillNtupleDColumn(i++, energy);
                 analysisManager->FillNtupleSColumn(
                     i++,

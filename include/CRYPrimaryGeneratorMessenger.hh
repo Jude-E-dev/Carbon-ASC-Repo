@@ -1,14 +1,14 @@
 #pragma once
 
 #include "G4UImessenger.hh"
-#include "globals.hh"
 
 class CRYPrimaryGeneratorAction;
 class G4UIdirectory;
 class G4UIcmdWithAString;
 class G4UIcmdWithoutParameter;
 
-class CRYPrimaryGeneratorMessenger: public G4UImessenger {
+class CRYPrimaryGeneratorMessenger: public G4UImessenger
+{
   public:
     CRYPrimaryGeneratorMessenger(CRYPrimaryGeneratorAction*);
     ~CRYPrimaryGeneratorMessenger();
@@ -21,5 +21,5 @@ class CRYPrimaryGeneratorMessenger: public G4UImessenger {
     G4UIcmdWithAString* FileCmd;
     G4UIcmdWithAString* InputCmd;
     G4UIcmdWithoutParameter* UpdateCmd;
-    std::string* MessInput;
+    G4String* MessInput;
 };

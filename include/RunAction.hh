@@ -8,38 +8,39 @@
 
 class G4Run;
 
-class RunAction: public G4UserRunAction {
+class RunAction: public G4UserRunAction
+{
   public:
-    RunAction(GCConfig config);
+    RunAction(const GCConfig& config);
     ~RunAction();
 
     void BeginOfRunAction(const G4Run*) override;
     void EndOfRunAction(const G4Run*) override;
 
     void TallySoilGammaBinary(
-        double energy,
-        double momentumZ,
-        double z,
-        int pdg
+        G4double energy,
+        G4double momentumZ,
+        G4double z,
+        G4int pdg
     );
     void TallyDetectorSurfaceBinary(
-        int pdg,
-        double z,
-        double rho,
-        double energy,
-        double momentumZ,
-        double momentumRho,
-        double momentumPhiDiff,
-        int sourcePDG,
-        double energyInSoil,
-        double zInSoil,
-        double rhoInSoil
+        G4int pdg,
+        G4double z,
+        G4double rho,
+        G4double energy,
+        G4double momentumZ,
+        G4double momentumRho,
+        G4double momentumPhiDiff,
+        G4int sourcePDG,
+        G4double energyInSoil,
+        G4double zInSoil,
+        G4double rhoInSoil
     );
 
-    void IncrementTransportExposure(double dt);
-    void IncrementDetectionExposure(double dt);
-    double GetTransportExposure() const;
-    double GetDetectionExposure() const;
+    void IncrementTransportExposure(G4double dt);
+    void IncrementDetectionExposure(G4double dt);
+    G4double GetTransportExposure() const;
+    G4double GetDetectionExposure() const;
 
   private:
     std::chrono::steady_clock::time_point startTime;
@@ -50,10 +51,10 @@ class RunAction: public G4UserRunAction {
     std::ofstream soilBinFile;
 
     // Only used in GCConfig::Transport
-    double transportExposure = 0.0;
-    std::vector<DetectorSurfaceEntry> detectorSurfaceBinEntries;
-    std::ofstream detectorSurfaceBinFile;
+    G4double transportExposure = 0.0;
+    std::vector<PreDetectorEntry> preDetectorBinEntries;
+    std::ofstream preDetectorBinFile;
 
     // Only used in GCConfig::Detect
-    double detectionExposure = 0.0;
+    G4double detectionExposure = 0.0;
 };

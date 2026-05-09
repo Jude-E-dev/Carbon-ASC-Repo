@@ -1,5 +1,6 @@
 #pragma once
 
+#include <G4String.hh>
 #include <G4VUserPrimaryGeneratorAction.hh>
 #include <fstream>
 #include <random>
@@ -10,17 +11,18 @@ class G4Event;
 class G4ParticleTable;
 class G4ParticleGun;
 
-class TransportPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction {
+class TransportPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction
+{
   public:
     TransportPrimaryGeneratorAction(
         const std::string& distributionPath,
-        SoilConfig soil
+        const SoilConfig& soil
     );
     ~TransportPrimaryGeneratorAction();
 
   public:
     void GeneratePrimaries(G4Event* anEvent);
-    double GetExposureTime();
+    G4double GetExposureTime() const;
 
   private:
     SoilConfig soil;
@@ -28,9 +30,9 @@ class TransportPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction {
     G4ParticleGun* gun;
     std::ifstream binFile;
     std::mt19937 rng;
-    std::uniform_real_distribution<double> azimuthDist;
-    std::uniform_real_distribution<double> positionDist;
+    std::uniform_real_distribution<G4double> azimuthDist;
+    std::uniform_real_distribution<G4double> positionDist;
     unsigned long eventsProcessed;
     unsigned long binFileNumEvents;
-    double binFileExposure;
+    G4double binFileExposure;
 };

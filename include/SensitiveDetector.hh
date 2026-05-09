@@ -2,7 +2,8 @@
 
 #include <G4VSensitiveDetector.hh>
 
-class SensitiveDetector: public G4VSensitiveDetector {
+class SensitiveDetector: public G4VSensitiveDetector
+{
   public:
     SensitiveDetector(const G4String& name);
     void Initialize(G4HCofThisEvent* hc);

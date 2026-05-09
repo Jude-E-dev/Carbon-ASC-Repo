@@ -1,5 +1,7 @@
 #include "CRYPrimaryGeneratorMessenger.hh"
 
+#include <G4String.hh>
+
 #include "CRYPrimaryGeneratorAction.hh"
 #include "G4UIcmdWithAString.hh"
 #include "G4UIcmdWithoutParameter.hh"
@@ -7,8 +9,9 @@
 
 CRYPrimaryGeneratorMessenger::CRYPrimaryGeneratorMessenger(
     CRYPrimaryGeneratorAction* Gun
-) :
-    Action(Gun) {
+)
+    : Action(Gun)
+{
     CRYDir = new G4UIdirectory("/CRY/");
     CRYDir->SetGuidance("CRY initialization");
 
@@ -26,10 +29,11 @@ CRYPrimaryGeneratorMessenger::CRYPrimaryGeneratorMessenger(
     UpdateCmd->SetGuidance("if you changed the CRY definition.");
     UpdateCmd->AvailableForStates(G4State_Idle);
 
-    MessInput = new std::string;
+    MessInput = new G4String;
 }
 
-CRYPrimaryGeneratorMessenger::~CRYPrimaryGeneratorMessenger() {
+CRYPrimaryGeneratorMessenger::~CRYPrimaryGeneratorMessenger()
+{
     delete CRYDir;
     delete InputCmd;
     delete UpdateCmd;
@@ -39,7 +43,8 @@ CRYPrimaryGeneratorMessenger::~CRYPrimaryGeneratorMessenger() {
 void CRYPrimaryGeneratorMessenger::SetNewValue(
     G4UIcommand* command,
     G4String newValue
-) {
+)
+{
     if (command == InputCmd) {
         Action->InputCRY();
         (*MessInput).append(newValue);

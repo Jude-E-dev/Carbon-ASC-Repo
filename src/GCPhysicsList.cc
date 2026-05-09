@@ -11,7 +11,8 @@
 #include <G4StepLimiterPhysics.hh>
 #include <G4StoppingPhysics.hh>
 
-GCPhysicsList::GCPhysicsList(G4int ver) {
+GCPhysicsList::GCPhysicsList(G4int ver)
+{
     defaultCutValue = 1.0 * CLHEP::mm;
     SetCutValue(0, "proton");
     SetVerboseLevel(ver);
@@ -26,7 +27,7 @@ GCPhysicsList::GCPhysicsList(G4int ver) {
     RegisterPhysics(new G4DecayPhysics(ver));
     RegisterPhysics(new G4RadioactiveDecayPhysics(ver));
 
-    // Problem children - Hadron Physics
+    // Hadron Physics
     RegisterPhysics(new G4HadronElasticPhysicsHP(ver));
     RegisterPhysics(new G4HadronPhysicsFTFP_BERT_HP(ver));
 
@@ -36,7 +37,4 @@ GCPhysicsList::GCPhysicsList(G4int ver) {
     // Ion Physics
     RegisterPhysics(new G4IonElasticPhysics(ver));
     RegisterPhysics(new G4IonPhysics(ver));
-
-    // // Step limiting for layered soil
-    // RegisterPhysics(new G4StepLimiterPhysics);
 }

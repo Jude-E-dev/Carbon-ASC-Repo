@@ -1,9 +1,11 @@
 #include <G4RandomTools.hh>
 #include <G4RunManagerFactory.hh>
 #include <G4SystemOfUnits.hh>
+#include <G4Types.hh>
 #include <G4UIExecutive.hh>
 #include <G4VisExecutive.hh>
 #include <G4ios.hh>
+#include <cstddef>
 #include <fstream>
 #include <random>
 #include <string>
@@ -14,7 +16,8 @@
 #include "DetectorConstruction.hh"
 #include "GCPhysicsList.hh"
 
-int invalidArguments() {
+int invalidArguments()
+{
     G4cerr
         << "Usage: ./groundCarbon [soil-character|transport|detect] [info|binary|all] <path.bin (transport/detect only)> <run count (optional)>\n"
         << "Or: ./groundCarbon merge <output_path.bin> output1.bin output2.bin ...\n"
@@ -22,9 +25,9 @@ int invalidArguments() {
         << "Note: choosing \'info\' will output a csv, \'binary\' will output a binary file.\n\n"
         << "An example of how to use this:\n"
         << "mpirun -n 5 ./groundCarbon soil-character binary 1000000\n"
-        << "./groundCarbon merge soil-character/soil.bin soil-character/*.bin"
-        << "mpirun -n 5 ./groundCarbon transport all soil-character/soil.bin 10000000"
-        << "./groundCarbon merge transport/predetection.bin transport/*.bin"
+        << "./groundCarbon merge soil-character/soil.bin soil-character/*.bin\n"
+        << "mpirun -n 5 ./groundCarbon transport all soil-character/soil.bin 10000000\n"
+        << "./groundCarbon merge transport/predetection.bin transport/*.bin\n"
         << "./groundCarbon detect info transport/predetection.bin 10000000"
         << G4endl;
     return 1;
@@ -32,7 +35,8 @@ int invalidArguments() {
 
 void mergeBinaries(std::vector<std::string> args);
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
     std::vector<std::string> args(argv, argv + argc);
 
     /* --------------------------------- Config --------------------------------- */
@@ -50,15 +54,18 @@ int main(int argc, char* argv[]) {
 
     auto soilConfig = SoilConfig {0.15, 16, 50 * cm, 5 * m}; // smaller volume
     std::string num_runs = "";
-    int updatePeriod = 1000;
+    G4int updatePeriod = 1000;
     OutputTypes outputTypes;
     if (args[2] == "info") {
         outputTypes = OutputTypes::INFO;
-    } else if (args[2] == "binary") {
+    }
+    else if (args[2] == "binary") {
         outputTypes = OutputTypes::BINARY;
-    } else if (args[2] == "all") {
+    }
+    else if (args[2] == "all") {
         outputTypes = OutputTypes::ALL;
-    } else {
+    }
+    else {
         return invalidArguments();
     }
 
@@ -69,7 +76,8 @@ int main(int argc, char* argv[]) {
         if (args.size() == 4) {
             num_runs = args[3];
         }
-    } else if (args[1] == "transport") {
+    }
+    else if (args[1] == "transport") {
         updatePeriod = 50000;
         G4cout << "args: " << args.size() << G4endl;
         if (args.size() < 4)
@@ -78,7 +86,8 @@ int main(int argc, char* argv[]) {
         if (args.size() == 5) {
             num_runs = args[4];
         }
-    } else if (args[1] == "detect") {
+    }
+    else if (args[1] == "detect") {
         updatePeriod = 50000;
         if (args.size() < 4)
             return invalidArguments();
@@ -86,7 +95,8 @@ int main(int argc, char* argv[]) {
         if (args.size() == 5) {
             num_runs = args[4];
         }
-    } else {
+    }
+    else {
         return invalidArguments();
     }
 
@@ -121,7 +131,8 @@ int main(int argc, char* argv[]) {
         // batch mode
         UImanager->ApplyCommand("/run/initialize ");
         UImanager->ApplyCommand("/run/beamOn " + num_runs);
-    } else {
+    }
+    else {
         // interactive mode
         UImanager->ApplyCommand("/control/execute init_vis.mac");
         ui->SessionStart();
@@ -132,29 +143,30 @@ int main(int argc, char* argv[]) {
     delete runManager;
 }
 
-void mergeBinaries(std::vector<std::string> args) {
+void mergeBinaries(std::vector<std::string> args)
+{
     // Calculate total exposure
-    double totalExposure = 0.0;
-    for (int i = 3; i < args.size(); i++) {
+    G4double totalExposure = 0.0;
+    for (size_t i = 3; i < args.size(); i++) {
         std::ifstream spectrum(args[i], std::ios::in | std::ios::binary);
         if (!spectrum.is_open())
             continue;
 
-        double exposure;
-        spectrum.read(reinterpret_cast<char*>(&exposure), sizeof(double));
+        G4double exposure;
+        spectrum.read(reinterpret_cast<char*>(&exposure), sizeof(G4double));
         totalExposure += exposure;
         spectrum.close();
     }
 
     // Merge files
     std::ofstream out(args[2], std::ios::binary);
-    out.write(reinterpret_cast<const char*>(&totalExposure), sizeof(double));
-    for (int i = 3; i < args.size(); i++) {
+    out.write(reinterpret_cast<const char*>(&totalExposure), sizeof(G4double));
+    for (size_t i = 3; i < args.size(); i++) {
         std::ifstream spectrum(args[i], std::ios::in | std::ios::binary);
         if (!spectrum.is_open())
             continue;
 
-        spectrum.seekg(sizeof(double), std::ios::beg);
+        spectrum.seekg(sizeof(G4double), std::ios::beg);
 
         char buffer[65536];
         while (spectrum.read(buffer, sizeof(buffer))) {

@@ -4,14 +4,17 @@
 #include <CRYSetup.h>
 
 #include <G4Event.hh>
+#include <G4String.hh>
 #include <G4SystemOfUnits.hh>
+#include <G4Types.hh>
 #include <fstream>
 
 #include "GCConstants.hh"
 #include "RNGWrapper.hh"
 
 //----------------------------------------------------------------------------//
-CRYPrimaryGeneratorAction::CRYPrimaryGeneratorAction(const char* inputfile) {
+CRYPrimaryGeneratorAction::CRYPrimaryGeneratorAction(const char* inputfile)
+{
     // define a particle gun
     particleGun = new G4ParticleGun();
 
@@ -25,8 +28,9 @@ CRYPrimaryGeneratorAction::CRYPrimaryGeneratorAction(const char* inputfile) {
             G4cout << "PrimaryGeneratorAction: Failed to open CRY input file= "
                    << inputfile << G4endl;
         InputState = -1;
-    } else {
-        std::string setupString("");
+    }
+    else {
+        G4String setupString("");
         while (!inputFile.getline(buffer, 1000).eof()) {
             setupString.append(buffer);
             setupString.append(" ");
@@ -58,12 +62,14 @@ CRYPrimaryGeneratorAction::CRYPrimaryGeneratorAction(const char* inputfile) {
 CRYPrimaryGeneratorAction::~CRYPrimaryGeneratorAction() {}
 
 //----------------------------------------------------------------------------//
-void CRYPrimaryGeneratorAction::InputCRY() {
+void CRYPrimaryGeneratorAction::InputCRY()
+{
     InputState = 1;
 }
 
 //----------------------------------------------------------------------------//
-void CRYPrimaryGeneratorAction::UpdateCRY(std::string* MessInput) {
+void CRYPrimaryGeneratorAction::UpdateCRY(G4String* MessInput)
+{
     CRYSetup* setup = new CRYSetup(*MessInput, CRY_DATA_PATH);
 
     gen = new CRYGenerator(setup);
@@ -78,7 +84,8 @@ void CRYPrimaryGeneratorAction::UpdateCRY(std::string* MessInput) {
 }
 
 //----------------------------------------------------------------------------//
-void CRYPrimaryGeneratorAction::CRYFromFile(G4String newValue) {
+void CRYPrimaryGeneratorAction::CRYFromFile(G4String newValue)
+{
     // Read the cry input file
     std::ifstream inputFile;
     inputFile.open(newValue, std::ios::in);
@@ -89,8 +96,9 @@ void CRYPrimaryGeneratorAction::CRYFromFile(G4String newValue) {
         G4cout << "Make sure to define the cry library on the command line"
                << G4endl;
         InputState = -1;
-    } else {
-        std::string setupString("");
+    }
+    else {
+        G4String setupString("");
         while (!inputFile.getline(buffer, 1000).eof()) {
             setupString.append(buffer);
             setupString.append(" ");
@@ -111,7 +119,8 @@ void CRYPrimaryGeneratorAction::CRYFromFile(G4String newValue) {
 }
 
 //----------------------------------------------------------------------------//
-void CRYPrimaryGeneratorAction::GeneratePrimaries(G4Event* ev) {
+void CRYPrimaryGeneratorAction::GeneratePrimaries(G4Event* ev)
+{
     if (InputState != 0) {
         G4String* str =
             new G4String("CRY library was not successfully initialized");
@@ -121,7 +130,7 @@ void CRYPrimaryGeneratorAction::GeneratePrimaries(G4Event* ev) {
     vect->clear();
     gen->genEvent(vect);
 
-    for (unsigned j = 0; j < vect->size(); j++) {
+    for (size_t j = 0; j < vect->size(); j++) {
         particleName = CRYUtils::partName((*vect)[j]->id());
 
         particleGun->SetParticleDefinition(
@@ -142,6 +151,7 @@ void CRYPrimaryGeneratorAction::GeneratePrimaries(G4Event* ev) {
     }
 }
 
-double CRYPrimaryGeneratorAction::GetExposureTime() {
+G4double CRYPrimaryGeneratorAction::GetExposureTime() const
+{
     return gen->timeSimulated();
 }

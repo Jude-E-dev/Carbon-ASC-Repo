@@ -14,18 +14,20 @@
 #include "TransportPrimaryGeneratorAction.hh"
 #include "overloaded.hh"
 
-RunAction::RunAction(GCConfig config) :
-    config {config},
-    soilBinEntries(),
-    soilBinFile(),
-    detectorSurfaceBinEntries(),
-    detectorSurfaceBinFile() {
+RunAction::RunAction(const GCConfig& config)
+    : startTime {}
+    , config {config}
+    , soilBinEntries {}
+    , soilBinFile {}
+    , preDetectorBinEntries {}
+    , preDetectorBinFile {}
+{
     auto visitor = overloaded {
         [](const CharacteriseSoilGammas& conf) {
             if (conf.outputTypes == OutputTypes::BINARY)
                 return;
 
-            auto analysisManager = G4AnalysisManager::Instance();
+            auto* analysisManager = G4AnalysisManager::Instance();
             analysisManager->SetDefaultFileType(conf.filetype);
             analysisManager->CreateNtuple(
                 "SecondaryGammas",
@@ -47,7 +49,7 @@ RunAction::RunAction(GCConfig config) :
             if (conf.outputTypes == OutputTypes::BINARY)
                 return;
 
-            auto analysisManager = G4AnalysisManager::Instance();
+            auto* analysisManager = G4AnalysisManager::Instance();
             analysisManager->SetDefaultFileType(conf.outputFiletype);
 
             analysisManager->CreateNtuple(
@@ -69,7 +71,7 @@ RunAction::RunAction(GCConfig config) :
             analysisManager->FinishNtuple();
         },
         [](const Detect& conf) {
-            auto analysisManager = G4AnalysisManager::Instance();
+            auto* analysisManager = G4AnalysisManager::Instance();
             analysisManager->SetDefaultFileType(conf.outputFiletype);
 
             analysisManager->CreateNtuple(
@@ -90,18 +92,19 @@ RunAction::RunAction(GCConfig config) :
 RunAction::~RunAction() {}
 
 // Saving data
-void RunAction::BeginOfRunAction(const G4Run* aRun) {
+void RunAction::BeginOfRunAction(const G4Run* aRun)
+{
     startTime = std::chrono::steady_clock::now();
     std::visit(
         overloaded {
             [this](const CharacteriseSoilGammas& conf) {
                 std::filesystem::create_directories(conf.outputDirectoryName);
                 std::random_device rd;
-                std::string id = std::to_string(rd());
+                auto id = std::to_string(rd());
 
                 if (conf.outputTypes == OutputTypes::INFO
                     || conf.outputTypes == OutputTypes::ALL) {
-                    auto analysisManager = G4AnalysisManager::Instance();
+                    auto* analysisManager = G4AnalysisManager::Instance();
                     analysisManager->OpenFile(
                         conf.outputDirectoryName + "/out" + id
                     );
@@ -120,7 +123,7 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
                 transportExposure = 0.0;
                 std::filesystem::create_directories(conf.outputDirectoryName);
                 std::random_device rd;
-                std::string id = std::to_string(rd());
+                auto id = std::to_string(rd());
 
                 if (conf.outputTypes == OutputTypes::INFO
                     || conf.outputTypes == OutputTypes::ALL) {
@@ -132,18 +135,18 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
 
                 if (conf.outputTypes == OutputTypes::BINARY
                     || conf.outputTypes == OutputTypes::ALL) {
-                    detectorSurfaceBinFile = std::ofstream(
+                    preDetectorBinFile = std::ofstream(
                         conf.outputDirectoryName + "/out" + id + ".bin",
                         std::ios::app | std::ios::binary
                     );
-                    detectorSurfaceBinEntries.clear();
+                    preDetectorBinEntries.clear();
                 }
             },
             [this](const Detect& conf) {
                 detectionExposure = 0.0;
                 std::filesystem::create_directories(conf.outputDirectoryName);
                 std::random_device rd;
-                std::string id = std::to_string(rd());
+                auto id = std::to_string(rd());
 
                 auto analysisManager = G4AnalysisManager::Instance();
                 analysisManager->OpenFile(
@@ -155,11 +158,13 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
     );
 }
 
-void RunAction::EndOfRunAction(const G4Run* aRun) {
-    auto endTime = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(
-        endTime - startTime
-    );
+void RunAction::EndOfRunAction(const G4Run* aRun)
+{
+    const auto endTime = std::chrono::steady_clock::now();
+    const auto elapsed =
+        std::chrono::duration_cast<std::chrono::duration<G4double>>(
+            endTime - startTime
+        );
 
     auto visitor = overloaded {
         [this](const CharacteriseSoilGammas& conf) {
@@ -170,12 +175,12 @@ void RunAction::EndOfRunAction(const G4Run* aRun) {
                 analysisManager->CloseFile();
             }
 
-            auto* runManager = G4RunManager::GetRunManager();
-            auto* generatorAction =
+            const auto* runManager = G4RunManager::GetRunManager();
+            const auto* generatorAction =
                 (CRYPrimaryGeneratorAction*)
                     runManager->GetUserPrimaryGeneratorAction();
 
-            double exposure = generatorAction->GetExposureTime();
+            const G4double exposure = generatorAction->GetExposureTime();
 
             if (conf.outputTypes == OutputTypes::BINARY
                 || conf.outputTypes == OutputTypes::ALL) {
@@ -206,94 +211,93 @@ void RunAction::EndOfRunAction(const G4Run* aRun) {
                 }
             }
 
-            G4cout << "Exposure: " << exposure << G4endl;
+            G4cout << "Exposure: " << exposure << "s" << G4endl;
         },
         [this](const TransportGammas& conf) {
             if (conf.outputTypes == OutputTypes::INFO
                 || conf.outputTypes == OutputTypes::ALL) {
-                auto analysisManager = G4AnalysisManager::Instance();
+                auto* analysisManager = G4AnalysisManager::Instance();
                 analysisManager->Write();
                 analysisManager->CloseFile();
             }
 
-            auto* runManager = G4RunManager::GetRunManager();
-            auto* generatorAction =
+            const auto* runManager = G4RunManager::GetRunManager();
+            const auto* generatorAction =
                 (TransportPrimaryGeneratorAction*)
                     runManager->GetUserPrimaryGeneratorAction();
 
-            double exposure = generatorAction->GetExposureTime();
+            const G4double exposure = generatorAction->GetExposureTime();
 
             if (conf.outputTypes == OutputTypes::BINARY
                 || conf.outputTypes == OutputTypes::ALL) {
-                if (detectorSurfaceBinFile.is_open()) {
-                    detectorSurfaceBinFile.write(
+                if (preDetectorBinFile.is_open()) {
+                    preDetectorBinFile.write(
                         reinterpret_cast<const char*>(&exposure),
                         sizeof(exposure)
                     );
-                    for (DetectorSurfaceEntry entry :
-                         detectorSurfaceBinEntries) {
-                        detectorSurfaceBinFile.write(
+                    for (PreDetectorEntry entry : preDetectorBinEntries) {
+                        preDetectorBinFile.write(
                             reinterpret_cast<const char*>(&entry.pdg),
                             sizeof(entry.pdg)
                         );
-                        detectorSurfaceBinFile.write(
+                        preDetectorBinFile.write(
                             reinterpret_cast<const char*>(&entry.z),
                             sizeof(entry.z)
                         );
-                        detectorSurfaceBinFile.write(
+                        preDetectorBinFile.write(
                             reinterpret_cast<const char*>(&entry.rho),
                             sizeof(entry.rho)
                         );
-                        detectorSurfaceBinFile.write(
+                        preDetectorBinFile.write(
                             reinterpret_cast<const char*>(&entry.energy),
                             sizeof(entry.energy)
                         );
-                        detectorSurfaceBinFile.write(
+                        preDetectorBinFile.write(
                             reinterpret_cast<const char*>(&entry.momentumZ),
                             sizeof(entry.momentumZ)
                         );
-                        detectorSurfaceBinFile.write(
+                        preDetectorBinFile.write(
                             reinterpret_cast<const char*>(&entry.momentumRho),
                             sizeof(entry.momentumRho)
                         );
-                        detectorSurfaceBinFile.write(
+                        preDetectorBinFile.write(
                             reinterpret_cast<const char*>(
                                 &entry.momentumPhiDiff
                             ),
                             sizeof(entry.momentumPhiDiff)
                         );
-                        detectorSurfaceBinFile.write(
+                        preDetectorBinFile.write(
                             reinterpret_cast<const char*>(&entry.sourcePDG),
                             sizeof(entry.sourcePDG)
                         );
-                        detectorSurfaceBinFile.write(
+                        preDetectorBinFile.write(
                             reinterpret_cast<const char*>(&entry.energyInSoil),
                             sizeof(entry.energyInSoil)
                         );
-                        detectorSurfaceBinFile.write(
+                        preDetectorBinFile.write(
                             reinterpret_cast<const char*>(&entry.zInSoil),
                             sizeof(entry.zInSoil)
                         );
-                        detectorSurfaceBinFile.write(
+                        preDetectorBinFile.write(
                             reinterpret_cast<const char*>(&entry.rhoInSoil),
                             sizeof(entry.rhoInSoil)
                         );
                     }
-                    detectorSurfaceBinFile.close();
+                    preDetectorBinFile.close();
                 }
             }
-            G4cout << "Exposure: " << exposure << G4endl;
+            G4cout << "Exposure: " << exposure << "s" << G4endl;
         },
         [this](const Detect& conf) {
-            auto analysisManager = G4AnalysisManager::Instance();
-            auto* runManager = G4RunManager::GetRunManager();
-            auto* generatorAction =
+            auto* analysisManager = G4AnalysisManager::Instance();
+            const auto* runManager = G4RunManager::GetRunManager();
+            const auto* generatorAction =
                 (DetectionPrimaryGeneratorAction*)
                     runManager->GetUserPrimaryGeneratorAction();
             analysisManager->Write();
             analysisManager->CloseFile();
 
-            double exposure = generatorAction->GetExposureTime();
+            const G4double exposure = generatorAction->GetExposureTime();
             G4cout << "Exposure: " << exposure << "s" << G4endl;
         }
     };
@@ -304,59 +308,62 @@ void RunAction::EndOfRunAction(const G4Run* aRun) {
 }
 
 void RunAction::TallySoilGammaBinary(
-    double energy,
-    double momentumZ,
-    double z,
-    int sourcePDG
-) {
-    TransportGammaEntry entry;
-    entry.energy = energy;
-    entry.momentumZ = momentumZ;
-    entry.z = z;
-    entry.sourcePDG = sourcePDG;
+    G4double energy,
+    G4double momentumZ,
+    G4double z,
+    G4int sourcePDG
+)
+{
+    TransportGammaEntry entry {energy, momentumZ, z, sourcePDG};
     soilBinEntries.push_back(entry);
 }
 
 void RunAction::TallyDetectorSurfaceBinary(
-    int pdg,
-    double z,
-    double rho,
-    double energy,
-    double momentumZ,
-    double momentumRho,
-    double momentumPhiDiff,
-    int sourcePDG,
-    double energyInSoil,
-    double zInSoil,
-    double rhoInSoil
-) {
-    DetectorSurfaceEntry entry;
-    entry.pdg = pdg;
-    entry.z = z;
-    entry.rho = rho;
-    entry.energy = energy;
-    entry.momentumZ = momentumZ;
-    entry.momentumRho = momentumRho;
-    entry.momentumPhiDiff = momentumPhiDiff;
-    entry.sourcePDG = sourcePDG;
-    entry.energyInSoil = energyInSoil;
-    entry.zInSoil = zInSoil;
-    entry.rhoInSoil = rhoInSoil;
-    detectorSurfaceBinEntries.push_back(entry);
+    G4int pdg,
+    G4double z,
+    G4double rho,
+    G4double energy,
+    G4double momentumZ,
+    G4double momentumRho,
+    G4double momentumPhiDiff,
+    G4int sourcePDG,
+    G4double energyInSoil,
+    G4double zInSoil,
+    G4double rhoInSoil
+)
+{
+    PreDetectorEntry entry {
+        pdg,
+        z,
+        rho,
+        energy,
+        momentumZ,
+        momentumRho,
+        momentumPhiDiff,
+        sourcePDG,
+        energyInSoil,
+        zInSoil,
+        rhoInSoil
+    };
+    preDetectorBinEntries.push_back(entry);
 }
 
-void RunAction::IncrementTransportExposure(double dt) {
+void RunAction::IncrementTransportExposure(G4double dt)
+{
     transportExposure += dt;
 }
 
-double RunAction::GetTransportExposure() const {
+G4double RunAction::GetTransportExposure() const
+{
     return transportExposure;
 }
 
-void RunAction::IncrementDetectionExposure(double dt) {
+void RunAction::IncrementDetectionExposure(G4double dt)
+{
     detectionExposure += dt;
 }
 
-double RunAction::GetDetectionExposure() const {
+G4double RunAction::GetDetectionExposure() const
+{
     return detectionExposure;
 }

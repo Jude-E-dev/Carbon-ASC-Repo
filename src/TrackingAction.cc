@@ -2,24 +2,27 @@
 
 #include <G4RunManager.hh>
 #include <G4Track.hh>
+#include <G4Types.hh>
 #include <G4ios.hh>
 
 #include "EventAction.hh"
 
-void TrackingAction::PreUserTrackingAction(const G4Track* track) {
-    auto* eventAction =
-        (EventAction*)G4RunManager::GetRunManager()->GetUserEventAction();
+void TrackingAction::PreUserTrackingAction(const G4Track* track)
+{
+    const auto* runManager = G4RunManager::GetRunManager();
+    auto* eventAction = (EventAction*)runManager->GetUserEventAction();
 
-    int parentID = track->GetParentID();
+    const G4int parentID = track->GetParentID();
     if (parentID == 0) { // primaries
-        int trackID = track->GetTrackID();
-        auto* particleDef = track->GetParticleDefinition();
+        const G4int trackID = track->GetTrackID();
+        const auto* particleDef = track->GetParticleDefinition();
         eventAction->RegisterPrimary(
             trackID,
             particleDef->GetParticleName(),
             particleDef->GetPDGEncoding()
         );
-    } else {
+    }
+    else {
         eventAction->RegisterPrimary(
             track->GetTrackID(),
             eventAction->GetPrimaryName(track),

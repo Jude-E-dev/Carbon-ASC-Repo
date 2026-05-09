@@ -10,6 +10,7 @@
 #include <G4SystemOfUnits.hh>
 #include <G4ThreeVector.hh>
 #include <G4Tubs.hh>
+#include <G4Types.hh>
 #include <G4VisAttributes.hh>
 #include <G4ios.hh>
 #include <cmath>
@@ -18,43 +19,49 @@
 #include "Configs.hh"
 #include "SensitiveDetector.hh"
 
-DetectorConstruction::DetectorConstruction(SoilConfig soil, GCConfig gcConfig) :
-    G4VUserDetectorConstruction(),
-    soilLogicalLayers(soil.soilCarbonSubdivisions, nullptr),
-    soilCarbonPercentage {soil.soilCarbonPercentage},
-    soilCarbonSubdivisions {soil.soilCarbonSubdivisions},
-    soilDepth {soil.soilDepth},
-    soilWidth {soil.soilWidth},
-    config {gcConfig},
-    logicalDetector(nullptr) {}
+DetectorConstruction::DetectorConstruction(
+    const SoilConfig& soil,
+    const GCConfig& gcConfig
+)
+    : G4VUserDetectorConstruction {}
+    , soilCarbonPercentage {soil.soilCarbonPercentage}
+    , soilCarbonSubdivisions {soil.soilCarbonSubdivisions}
+    , soilDepth {soil.soilDepth}
+    , soilWidth {soil.soilWidth}
+    , soilLogicalLayers(soil.soilCarbonSubdivisions, nullptr)
+    , config {gcConfig}
+    , logicalDetector {nullptr}
+{
+}
 
 DetectorConstruction::~DetectorConstruction() {}
 
-G4VPhysicalVolume* DetectorConstruction::Construct() {
-    G4NistManager* nist = G4NistManager::Instance();
+G4VPhysicalVolume* DetectorConstruction::Construct()
+{
+    auto* nist = G4NistManager::Instance();
 
     /* -------------------------------- Materials ------------------------------- */
 
-    G4Element* elO = new G4Element("Oxygen", "O", 8., 16.00 * g / mole);
-    G4Element* elSi = new G4Element("Silicon", "Si", 14., 28.09 * g / mole);
-    G4Element* elAl = new G4Element("Aluminum", "Al", 13., 26.98 * g / mole);
-    G4Element* elFe = new G4Element("Iron", "Fe", 26., 55.85 * g / mole);
-    G4Element* elCa = new G4Element("Calcium", "Ca", 20., 69.72 * g / mole);
-    G4Element* elNa = new G4Element("Sodium", "Na", 11., 22.99 * g / mole);
-    G4Element* elK = new G4Element("Potassium", "K", 19., 39.1 * g / mole);
-    G4Element* elMg = new G4Element("Magnesium", "Mg", 12., 24.31 * g / mole);
-    G4Element* elTi = new G4Element("Titanium", "Ti", 22., 47.87 * g / mole);
-    G4Element* elMn = new G4Element("Manganese", "Mn", 25., 54.94 * g / mole);
-    G4Element* elC = new G4Element("Carbon", "C", 6., 12.01 * g / mole);
-    G4Element* elH = new G4Element("Hydrogen", "H", 1., 1.01 * g / mole);
-    G4Element* elN = new G4Element("Nitrogen", "N", 7., 14.01 * g / mole);
-    G4Element* elP = new G4Element("Phosphorus", "P", 15., 30.97 * g / mole);
-    G4Element* elS = new G4Element("Sulfur", "S", 16., 32.07 * g / mole);
+    auto* elO = new G4Element("Oxygen", "O", 8., 16.00 * g / mole);
+    auto* elSi = new G4Element("Silicon", "Si", 14., 28.09 * g / mole);
+    auto* elAl = new G4Element("Aluminum", "Al", 13., 26.98 * g / mole);
+    auto* elFe = new G4Element("Iron", "Fe", 26., 55.85 * g / mole);
+    auto* elCa = new G4Element("Calcium", "Ca", 20., 69.72 * g / mole);
+    auto* elNa = new G4Element("Sodium", "Na", 11., 22.99 * g / mole);
+    auto* elK = new G4Element("Potassium", "K", 19., 39.1 * g / mole);
+    auto* elMg = new G4Element("Magnesium", "Mg", 12., 24.31 * g / mole);
+    auto* elTi = new G4Element("Titanium", "Ti", 22., 47.87 * g / mole);
+    auto* elMn = new G4Element("Manganese", "Mn", 25., 54.94 * g / mole);
+    auto* elC = new G4Element("Carbon", "C", 6., 12.01 * g / mole);
+    auto* elH = new G4Element("Hydrogen", "H", 1., 1.01 * g / mole);
+    auto* elN = new G4Element("Nitrogen", "N", 7., 14.01 * g / mole);
+    auto* elP = new G4Element("Phosphorus", "P", 15., 30.97 * g / mole);
+    auto* elS = new G4Element("Sulfur", "S", 16., 32.07 * g / mole);
 
-    G4Material* air = nist->FindOrBuildMaterial("G4_AIR");
-    G4Material* water = nist->FindOrBuildMaterial("G4_WATER");
-    G4Material* germanium = nist->FindOrBuildMaterial("G4_Ge");
-    G4Material* soilOrganicCarbon =
+    auto* air = nist->FindOrBuildMaterial("G4_AIR");
+    auto* water = nist->FindOrBuildMaterial("G4_WATER");
+    auto* germanium = nist->FindOrBuildMaterial("G4_Ge");
+    auto* soilOrganicCarbon =
         new G4Material("soilOrganicCarbon", 1.2 * g / cm3, 6);
     soilOrganicCarbon->AddElement(elC, 0.58);
     soilOrganicCarbon->AddElement(elO, 0.22);
@@ -64,7 +71,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     soilOrganicCarbon->AddElement(elS, 0.01);
 
     // From McTaggart
-    G4Material* mineralComponent =
+    auto* mineralComponent =
         new G4Material("mineralComponent", 2.6 * g / cm3, 10);
     mineralComponent->AddElement(elO, 0.440);
     mineralComponent->AddElement(elSi, 0.280);
@@ -80,22 +87,20 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
 
     /* ---------------------------------- World --------------------------------- */
 
-    G4Box* solidWorld = new G4Box(
+    auto* solidWorld = new G4Box(
         "WorldSolid",
         0.5 * soilWidth,
         0.5 * soilWidth,
         soilDepth // twice as long as soil depth
     );
 
-    G4LogicalVolume* logicWorld =
-        new G4LogicalVolume(solidWorld, air, "WorldLogical");
+    auto* logicWorld = new G4LogicalVolume(solidWorld, air, "WorldLogical");
 
-    G4VisAttributes* visWorld =
-        new G4VisAttributes(G4Colour(0.3, 0.4, 0.9, 1.0));
+    auto* visWorld = new G4VisAttributes(G4Colour(0.3, 0.4, 0.9, 1.0));
     visWorld->SetForceWireframe(true);
     logicWorld->SetVisAttributes(visWorld);
 
-    G4VPhysicalVolume* physWorld = new G4PVPlacement(
+    auto* physWorld = new G4PVPlacement(
         nullptr,
         G4ThreeVector(),
         logicWorld,
@@ -109,7 +114,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     /* -------------------------- Germanium Detector -------------------------- */
 
     if (!std::holds_alternative<CharacteriseSoilGammas>(config)) {
-        G4Tubs* detectorCylinder = new G4Tubs(
+        auto* detectorCylinder = new G4Tubs(
             "SolidDetector",
             0.0,
             8.3 * cm,
@@ -139,22 +144,22 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     /* ------------------------------ Soil Volumes ------------------------------ */
     /* -------------- https://www.desmos.com/calculator/tcl1fcxpzj -------------- */
 
-    G4double airDensity = air->GetDensity() / (g / cm3);
-    G4double waterDensity = water->GetDensity() / (g / cm3);
-    G4double carbonDensity = soilOrganicCarbon->GetDensity() / (g / cm3);
-    G4double mineralDensity = mineralComponent->GetDensity() / (g / cm3);
+    const G4double airDensity = air->GetDensity() / (g / cm3);
+    const G4double waterDensity = water->GetDensity() / (g / cm3);
+    const G4double carbonDensity = soilOrganicCarbon->GetDensity() / (g / cm3);
+    const G4double mineralDensity = mineralComponent->GetDensity() / (g / cm3);
 
     // Soil parameters, from McTaggart
-    G4double airVolumeFraction = 0.25;
-    G4double waterVolumeFraction = 0.25;
-    G4double k = 0.02349 / cm;
+    const G4double airVolumeFraction = 0.25;
+    const G4double waterVolumeFraction = 0.25;
+    const G4double k = 0.02349 / cm;
 
     // Construct layers
     G4double zTop = 0.0;
     G4double reachedBottom = false;
-    for (int i = 0; i < soilCarbonSubdivisions; i++) {
+    for (size_t i = 0; i < soilCarbonSubdivisions; i++) {
         G4double zBottom =
-            std::log(1.0 - (double)(i + 1) / soilCarbonSubdivisions) / k;
+            std::log(1.0 - (G4double)(i + 1) / soilCarbonSubdivisions) / k;
 
         if (zBottom < -soilDepth) {
             zBottom = -soilDepth;
@@ -164,30 +169,30 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
             zBottom = -soilDepth;
         }
 
-        G4double carbonVolumeFraction =
+        const G4double carbonVolumeFraction =
             soilCarbonPercentage * std::exp(k * zBottom);
-        G4double mineralVolumeFraction = 1.0 - airVolumeFraction
+        const G4double mineralVolumeFraction = 1.0 - airVolumeFraction
             - waterVolumeFraction - carbonVolumeFraction;
 
-        G4double totalMass = airVolumeFraction * airDensity
+        const G4double totalMass = airVolumeFraction * airDensity
             + waterVolumeFraction * waterDensity
             + carbonVolumeFraction * carbonDensity
             + mineralVolumeFraction * mineralDensity;
 
-        G4double density = totalMass
+        const G4double density = totalMass
             / (airVolumeFraction + waterVolumeFraction + carbonVolumeFraction
                + mineralVolumeFraction);
 
-        G4String soilName = "SoilMixtureLayer_" + std::to_string(i);
-        G4Material* soilMixture =
-            new G4Material(soilName, density * g / cm3, 4);
+        const G4String soilName = "SoilMixtureLayer_" + std::to_string(i);
+        auto* soilMixture = new G4Material(soilName, density * g / cm3, 4);
 
-        G4double airMassFraction = airVolumeFraction * airDensity / density;
-        G4double waterMassFraction =
+        const G4double airMassFraction =
+            airVolumeFraction * airDensity / density;
+        const G4double waterMassFraction =
             waterVolumeFraction * waterDensity / density;
-        G4double soilMassFraction =
+        const G4double soilMassFraction =
             carbonVolumeFraction * carbonDensity / density;
-        G4double mineralMassFraction =
+        const G4double mineralMassFraction =
             1.0 - airMassFraction - waterMassFraction - soilMassFraction;
 
         soilMixture->AddMaterial(air, airMassFraction);
@@ -218,11 +223,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
                << " }\n"
                << "}" << G4endl;
 
-        G4String nameSolid = "SolidLayer_" + std::to_string(i);
-        G4String nameLogical = "LogicalLayer_" + std::to_string(i);
-        G4String namePhysical = "PhysicalLayer_" + std::to_string(i);
+        const G4String nameSolid = "SolidLayer_" + std::to_string(i);
+        const G4String nameLogical = "LogicalLayer_" + std::to_string(i);
+        const G4String namePhysical = "PhysicalLayer_" + std::to_string(i);
 
-        G4Box* solidLayer = new G4Box(
+        auto* solidLayer = new G4Box(
             nameSolid,
             0.5 * soilWidth,
             0.5 * soilWidth,
@@ -232,8 +237,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
         soilLogicalLayers[i] =
             new G4LogicalVolume(solidLayer, soilMixture, nameLogical);
 
-        G4double t = 0.8 + 0.5 * (carbonVolumeFraction / 0.15);
-        G4VisAttributes* visSoil =
+        const G4double t = 0.8 + 0.5 * (carbonVolumeFraction / 0.15);
+        auto* visSoil =
             new G4VisAttributes(G4Colour(0.74 * t, 0.55 * t, 0.45 * t, 1.0));
         visSoil->SetForceWireframe(true);
         soilLogicalLayers[i]->SetVisAttributes(visSoil);
@@ -257,9 +262,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     return physWorld;
 }
 
-void DetectorConstruction::ConstructSDandField() {
+void DetectorConstruction::ConstructSDandField()
+{
     if (std::holds_alternative<Detect>(config)) {
-        SensitiveDetector* sd = new SensitiveDetector("MeasurementSD");
+        auto* sd = new SensitiveDetector("MeasurementSD");
         G4SDManager::GetSDMpointer()->AddNewDetector(sd);
         logicalDetector->SetSensitiveDetector(sd);
     }

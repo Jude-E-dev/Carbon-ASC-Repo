@@ -4,9 +4,10 @@
 
 #include "Configs.hh"
 
-class SteppingAction: public G4UserSteppingAction {
+class SteppingAction: public G4UserSteppingAction
+{
   public:
-    SteppingAction(GCConfig config);
+    SteppingAction(const GCConfig& config);
     void UserSteppingAction(const G4Step* step) override;
 
   private:

@@ -17,23 +17,26 @@ ActionInitialization::ActionInitialization(
     SoilConfig soil,
     GCConfig config,
     int updatePeriod
-) :
-    G4VUserActionInitialization(),
-    config {config},
-    soil {soil},
-    updatePeriod {updatePeriod} {}
+)
+    : G4VUserActionInitialization {}
+    , config {config}
+    , soil {soil}
+    , updatePeriod {updatePeriod}
+{
+}
 
 ActionInitialization::~ActionInitialization() {}
 
-void ActionInitialization::BuildForMaster() const {
+void ActionInitialization::BuildForMaster() const
+{
     RunAction* runAction = new RunAction(config);
     SetUserAction(runAction);
 }
 
-void ActionInitialization::Build() const {
-    auto* runAction = new RunAction(config);
-    SetUserAction(runAction);
-    SetUserAction(new EventAction(runAction, config, updatePeriod));
+void ActionInitialization::Build() const
+{
+    SetUserAction(new RunAction(config));
+    SetUserAction(new EventAction(config, updatePeriod));
     SetUserAction(new SteppingAction(config));
 
     auto visitor = overloaded {

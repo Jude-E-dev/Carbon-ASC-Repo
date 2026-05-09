@@ -1,25 +1,33 @@
 #pragma once
 
+#include <G4Types.hh>
+
 struct TransportGammaEntry {
-    double energy;
-    double momentumZ;
-    double z;
-    int sourcePDG;
+    G4double energy;
+    G4double momentumZ;
+    G4double z;
+    G4int sourcePDG;
 };
 
-struct DetectorSurfaceEntry {
-    int pdg;
+constexpr auto TRANSPORT_GAMMA_ENTRY_SIZE =
+    3 * sizeof(G4double) + 2 * sizeof(G4int);
 
-    double z;
-    double rho;
+struct PreDetectorEntry {
+    G4int pdg;
 
-    double energy;
-    double momentumZ;
-    double momentumRho;
-    double momentumPhiDiff;
+    G4double z;
+    G4double rho;
 
-    int sourcePDG;
-    double energyInSoil;
-    double zInSoil;
-    double rhoInSoil;
+    G4double energy;
+    G4double momentumZ;
+    G4double momentumRho;
+    G4double momentumPhiDiff;
+
+    G4int sourcePDG;
+    G4double energyInSoil;
+    G4double zInSoil;
+    G4double rhoInSoil;
 };
+
+constexpr auto PRE_DETECTOR_ENTRY_SIZE =
+    9 * sizeof(G4double) + 2 * sizeof(G4int);

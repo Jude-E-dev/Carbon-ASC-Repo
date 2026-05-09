@@ -6,12 +6,13 @@
 
 class G4GeneralParticleSource;
 
-class ActionInitialization: public G4VUserActionInitialization {
+class ActionInitialization: public G4VUserActionInitialization
+{
   public:
     ActionInitialization(
         SoilConfig soil,
         GCConfig mode,
-        int updatePeriod = 1000
+        G4int updatePeriod = 1000
     );
     virtual ~ActionInitialization();
 
@@ -21,5 +22,5 @@ class ActionInitialization: public G4VUserActionInitialization {
   private:
     GCConfig config;
     SoilConfig soil;
-    int updatePeriod;
+    G4int updatePeriod;
 };
