@@ -14,8 +14,8 @@
 #include "overloaded.hh"
 
 ActionInitialization::ActionInitialization(
-    SoilConfig soil,
-    GCConfig config,
+    const SoilConfig& soil,
+    const GCConfig& config,
     int updatePeriod
 )
     : G4VUserActionInitialization {}

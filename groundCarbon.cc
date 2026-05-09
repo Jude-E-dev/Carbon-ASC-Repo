@@ -1,3 +1,23 @@
+/**
+ * @file groundCarbon.cc
+ * @author Jay Johnston (jaidyn.johnston@icloud.com)
+ * @brief This program simulates gamma ray spectra measured by a detector
+ * above soil with varying amounts of ground carbon. The program has three
+ * modes it can run in:
+ *   1. 'soil-character' - cosmic rays are sent into the soil, and any
+ *       secondary gammas are recorded and killed.
+ *   2. 'transport' - recorded gammas are replayed, and any particles that hit
+ *       the detector are recorded and killed just before entering the detector.
+ *   3. 'detect' - transported gamma rays are replayed directly into the
+ *       detector to simulate the detector's response.
+ * At each step, either binary files can be created, CSV files can be created,
+ * or both.
+ * 
+ * @version 0.1
+ * @date 2026-05-09
+ * 
+ */
+
 #include <G4RandomTools.hh>
 #include <G4RunManagerFactory.hh>
 #include <G4SystemOfUnits.hh>
@@ -16,24 +36,8 @@
 #include "DetectorConstruction.hh"
 #include "GCPhysicsList.hh"
 
-int invalidArguments()
-{
-    G4cerr
-        << "Usage: ./groundCarbon [soil-character|transport|detect] [info|binary|all] <path.bin (transport/detect only)> <run count (optional)>\n"
-        << "Or: ./groundCarbon merge <output_path.bin> output1.bin output2.bin ...\n"
-        << "Note: if no run count is given, Geant4 will launch a GUI.\n"
-        << "Note: choosing \'info\' will output a csv, \'binary\' will output a binary file.\n\n"
-        << "An example of how to use this:\n"
-        << "mpirun -n 5 ./groundCarbon soil-character binary 1000000\n"
-        << "./groundCarbon merge soil-character/soil.bin soil-character/*.bin\n"
-        << "mpirun -n 5 ./groundCarbon transport all soil-character/soil.bin 10000000\n"
-        << "./groundCarbon merge transport/predetection.bin transport/*.bin\n"
-        << "./groundCarbon detect info transport/predetection.bin 10000000"
-        << G4endl;
-    return 1;
-}
-
-void mergeBinaries(std::vector<std::string> args);
+int invalidArguments();
+void mergeBinaries(const std::vector<std::string>& args);
 
 int main(int argc, char* argv[])
 {
@@ -143,7 +147,15 @@ int main(int argc, char* argv[])
     delete runManager;
 }
 
-void mergeBinaries(std::vector<std::string> args)
+
+/**
+ * @brief Merge binary outputs from runs. The first 8 bytes of these files
+ * contain the exposure time of the run; this will handle adding these together
+ * before concatenating the raw bytes
+ * 
+ * @param args The arguments to the program
+ */
+void mergeBinaries(const std::vector<std::string>& args)
 {
     // Calculate total exposure
     G4double totalExposure = 0.0;
@@ -177,4 +189,22 @@ void mergeBinaries(std::vector<std::string> args)
         }
     }
     out.close();
+}
+
+int invalidArguments()
+{
+    G4cerr
+        << "Usage: ./groundCarbon [soil-character|transport|detect] [info|binary|all] <path.bin (transport/detect only)> <run count (optional)>\n"
+        << "Or: ./groundCarbon merge <output_path.bin> output1.bin output2.bin ...\n\n"
+        << "Note: if no run count is given, Geant4 will launch a GUI.\n"
+        << "Note: choosing \'info\' will output a csv, \'binary\' will output a binary file.\n"
+        << "      \'all\' will do both. These options have no effect when doing a \'detect\' run.\n\n"
+        << "An example of how to use this:\n"
+        << "  $ mpirun -n 5 ./groundCarbon soil-character binary 1000000\n"
+        << "  $ ./groundCarbon merge soil-character/soil.bin soil-character/*.bin\n"
+        << "  $ mpirun -n 5 ./groundCarbon transport all soil-character/soil.bin 10000000\n"
+        << "  $ ./groundCarbon merge transport/predetection.bin transport/*.bin\n"
+        << "  $ ./groundCarbon detect info transport/predetection.bin 10000000"
+        << G4endl;
+    return 1;
 }

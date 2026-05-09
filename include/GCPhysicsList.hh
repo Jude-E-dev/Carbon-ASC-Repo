@@ -2,6 +2,10 @@
 
 #include "G4VModularPhysicsList.hh"
 
+/**
+ * @brief The simplified physics list for this GroundCarbon project
+ * 
+ */
 class GCPhysicsList: public G4VModularPhysicsList
 {
   public:

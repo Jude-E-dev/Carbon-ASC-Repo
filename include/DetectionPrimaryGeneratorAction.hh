@@ -12,11 +12,23 @@ class G4ParticleGun;
 class DetectionPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction
 {
   public:
+    /**
+   * @brief Construct a new Detection Primary Generator Action object
+   * 
+   * @param distributionPath Path to the binary file from a soil
+   * characterisation run.
+   */
     DetectionPrimaryGeneratorAction(const std::string& distributionPath);
     ~DetectionPrimaryGeneratorAction();
 
   public:
     void GeneratePrimaries(G4Event* ev);
+    /**
+     * @brief Get the amount of time that would need to pass to achieve this
+     * detection, in seconds
+     * 
+     * @return G4double Exposure time, in seconds
+     */
     G4double GetExposureTime() const;
 
   private:

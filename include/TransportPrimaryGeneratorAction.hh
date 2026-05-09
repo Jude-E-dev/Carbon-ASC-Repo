@@ -11,9 +11,19 @@ class G4Event;
 class G4ParticleTable;
 class G4ParticleGun;
 
+/**
+ * @brief Primary generator for replaying particles during transport runs
+ * 
+ */
 class TransportPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction
 {
   public:
+    /**
+   * @brief Construct a new Transport Primary Generator Action object
+   * 
+   * @param distributionPath Path to the binary file containing soil gammas
+   * @param soil Configuration information about the soil
+   */
     TransportPrimaryGeneratorAction(
         const std::string& distributionPath,
         const SoilConfig& soil
@@ -22,6 +32,13 @@ class TransportPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction
 
   public:
     void GeneratePrimaries(G4Event* anEvent);
+
+    /**
+     * @brief Get the amount of time that would need to pass to achieve this
+     * detection, in seconds
+     * 
+     * @return G4double Exposure time, in seconds
+     */
     G4double GetExposureTime() const;
 
   private:

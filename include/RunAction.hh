@@ -8,6 +8,10 @@
 
 class G4Run;
 
+/**
+ * @brief Code that runs per-run (across many events)
+ * 
+ */
 class RunAction: public G4UserRunAction
 {
   public:
@@ -17,12 +21,46 @@ class RunAction: public G4UserRunAction
     void BeginOfRunAction(const G4Run*) override;
     void EndOfRunAction(const G4Run*) override;
 
+    /**
+     * @brief Tally information during a characterisation event. These will all
+     * be stored in a binary file if the program was run with 'binary'
+     * 
+     * @param energy The energy of the gamma ray produced
+     * @param momentumZ The z-momentum of the gamma ray produced
+     * @param z The depth of the gamma ray produced
+     * @param pdg The PDG of the cosmic ray that this gamma ray traces back to
+     */
     void TallySoilGammaBinary(
         G4double energy,
         G4double momentumZ,
         G4double z,
         G4int pdg
     );
+
+    /**
+     * @brief Tally information during a transport event. These will all be
+     * stored in a binary file if the program was run with 'binary'. This
+     * should be called when a particle is about to intersect the detector.
+     * 
+     * @param pdg The PDG of the particle incident to the detector
+     * @param z The z-position of the particle incident to the detector
+     * @param rho The distance from the z-axis of the particle incident to the
+     * detector
+     * @param energy The energy of the particle incident to the detector
+     * @param momentumZ The z-momentum of the particle incident to the detector
+     * @param momentumRho The radial momentum of the particle incident to the
+     * detector
+     * @param momentumPhiDiff The angle of the momentum of the particle
+     * incident to the detector, measured relative to the particle's position
+     * azimuth
+     * @param sourcePDG The PDG of the cosmic ray that led to this event
+     * @param energyInSoil The energy of the gamma ray that led to this event,
+     * when it was produced in the soil
+     * @param zInSoil The depth of the gamma ray that led to this event,
+     * when it was produced in the soil
+     * @param rhoInSoil The distance from the z-axis of the gamma ray that led
+     * to this event, when it was produced in the soil
+     */
     void TallyDetectorSurfaceBinary(
         G4int pdg,
         G4double z,

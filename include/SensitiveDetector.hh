@@ -2,6 +2,11 @@
 
 #include <G4VSensitiveDetector.hh>
 
+/**
+ * @brief Called as particles step through the detector. Note that this is only
+ * used in 'detect' runs.
+ * 
+ */
 class SensitiveDetector: public G4VSensitiveDetector
 {
   public:
