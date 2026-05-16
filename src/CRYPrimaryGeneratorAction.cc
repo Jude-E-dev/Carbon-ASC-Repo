@@ -14,9 +14,9 @@
 
 //----------------------------------------------------------------------------//
 CRYPrimaryGeneratorAction::CRYPrimaryGeneratorAction(const char* inputfile)
+    : particleGun(new G4ParticleGun())
 {
     // define a particle gun
-    particleGun = new G4ParticleGun();
 
     // Read the cry input file
     std::ifstream inputFile;
@@ -59,9 +59,6 @@ CRYPrimaryGeneratorAction::CRYPrimaryGeneratorAction(const char* inputfile)
 }
 
 //----------------------------------------------------------------------------//
-CRYPrimaryGeneratorAction::~CRYPrimaryGeneratorAction() {}
-
-//----------------------------------------------------------------------------//
 void CRYPrimaryGeneratorAction::InputCRY()
 {
     InputState = 1;
@@ -84,7 +81,7 @@ void CRYPrimaryGeneratorAction::UpdateCRY(G4String* MessInput)
 }
 
 //----------------------------------------------------------------------------//
-void CRYPrimaryGeneratorAction::CRYFromFile(G4String newValue)
+void CRYPrimaryGeneratorAction::CRYFromFile(const G4String& newValue)
 {
     // Read the cry input file
     std::ifstream inputFile;
@@ -119,7 +116,7 @@ void CRYPrimaryGeneratorAction::CRYFromFile(G4String newValue)
 }
 
 //----------------------------------------------------------------------------//
-void CRYPrimaryGeneratorAction::GeneratePrimaries(G4Event* ev)
+void CRYPrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
 {
     if (InputState != 0) {
         G4String* str =
@@ -146,7 +143,7 @@ void CRYPrimaryGeneratorAction::GeneratePrimaries(G4Event* ev)
             G4ThreeVector((*vect)[j]->u(), (*vect)[j]->v(), (*vect)[j]->w())
         );
         particleGun->SetParticleTime((*vect)[j]->t());
-        particleGun->GeneratePrimaryVertex(ev);
+        particleGun->GeneratePrimaryVertex(event);
         delete (*vect)[j];
     }
 }

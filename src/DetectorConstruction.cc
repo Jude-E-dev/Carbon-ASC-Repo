@@ -23,8 +23,7 @@ DetectorConstruction::DetectorConstruction(
     const SoilConfig& soil,
     const GCConfig& gcConfig
 )
-    : G4VUserDetectorConstruction {}
-    , soilCarbonPercentage {soil.soilCarbonPercentage}
+    : soilCarbonPercentage {soil.soilCarbonPercentage}
     , soilCarbonSubdivisions {soil.soilCarbonSubdivisions}
     , soilDepth {soil.soilDepth}
     , soilWidth {soil.soilWidth}
@@ -138,8 +137,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
         );
     }
 
-    if (std::holds_alternative<Detect>(config))
+    if (std::holds_alternative<Detect>(config)) {
         return physWorld;
+    }
 
     /* ------------------------------ Soil Volumes ------------------------------ */
     /* -------------- https://www.desmos.com/calculator/tcl1fcxpzj -------------- */
@@ -152,14 +152,15 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     // Soil parameters, from McTaggart
     const G4double airVolumeFraction = 0.25;
     const G4double waterVolumeFraction = 0.25;
-    const G4double k = 0.02349 / cm;
+    const G4double carbonDecayRate = 0.02349 / cm;
 
     // Construct layers
     G4double zTop = 0.0;
-    G4double reachedBottom = false;
+    G4bool reachedBottom = false;
     for (size_t i = 0; i < soilCarbonSubdivisions; i++) {
         G4double zBottom =
-            std::log(1.0 - (G4double)(i + 1) / soilCarbonSubdivisions) / k;
+            std::log(1.0 - (G4double)(i + 1) / soilCarbonSubdivisions)
+            / carbonDecayRate;
 
         if (zBottom < -soilDepth) {
             zBottom = -soilDepth;
@@ -170,7 +171,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
         }
 
         const G4double carbonVolumeFraction =
-            soilCarbonPercentage * std::exp(k * zBottom);
+            soilCarbonPercentage * std::exp(carbonDecayRate * zBottom);
         const G4double mineralVolumeFraction = 1.0 - airVolumeFraction
             - waterVolumeFraction - carbonVolumeFraction;
 
@@ -255,8 +256,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
         );
 
         zTop = zBottom;
-        if (reachedBottom)
+        if (reachedBottom) {
             break;
+        }
     }
 
     return physWorld;

@@ -11,25 +11,24 @@ CRYPrimaryGeneratorMessenger::CRYPrimaryGeneratorMessenger(
     CRYPrimaryGeneratorAction* Gun
 )
     : Action(Gun)
+    , CRYDir(new G4UIdirectory("/CRY/"))
+    , FileCmd(new G4UIcmdWithAString("/CRY/file", this))
+    , InputCmd(new G4UIcmdWithAString("/CRY/input", this))
+    , UpdateCmd(new G4UIcmdWithoutParameter("/CRY/update", this))
+    , MessInput(new G4String)
 {
-    CRYDir = new G4UIdirectory("/CRY/");
     CRYDir->SetGuidance("CRY initialization");
 
-    FileCmd = new G4UIcmdWithAString("/CRY/file", this);
     FileCmd->SetGuidance("This reads the CRY definition from a file");
     FileCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
 
-    InputCmd = new G4UIcmdWithAString("/CRY/input", this);
     InputCmd->SetGuidance("CRY input lines");
     InputCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
 
-    UpdateCmd = new G4UIcmdWithoutParameter("/CRY/update", this);
     UpdateCmd->SetGuidance("Update CRY definition.");
     UpdateCmd->SetGuidance("This command MUST be applied before \"beamOn\" ");
     UpdateCmd->SetGuidance("if you changed the CRY definition.");
     UpdateCmd->AvailableForStates(G4State_Idle);
-
-    MessInput = new G4String;
 }
 
 CRYPrimaryGeneratorMessenger::~CRYPrimaryGeneratorMessenger()

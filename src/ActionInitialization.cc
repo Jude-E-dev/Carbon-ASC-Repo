@@ -18,41 +18,44 @@ ActionInitialization::ActionInitialization(
     const GCConfig& config,
     int updatePeriod
 )
-    : G4VUserActionInitialization {}
-    , config {config}
+    : config {config}
     , soil {soil}
     , updatePeriod {updatePeriod}
 {
 }
 
-ActionInitialization::~ActionInitialization() {}
-
 void ActionInitialization::BuildForMaster() const
 {
-    RunAction* runAction = new RunAction(config);
-    SetUserAction(runAction);
+    SetUserAction(new RunAction(config));
 }
 
 void ActionInitialization::Build() const
 {
-    SetUserAction(new RunAction(config));
-    SetUserAction(new EventAction(config, updatePeriod));
-    SetUserAction(new SteppingAction(config));
+    auto* runAction = new RunAction(config);
+    auto* eventAction = new EventAction(config, updatePeriod);
+    SetUserAction(runAction);
+    SetUserAction(eventAction);
+    SetUserAction(new SteppingAction(config, eventAction, runAction));
 
     auto visitor = overloaded {
-        [this](const CharacteriseSoilGammas& conf) {
+        [&, this](const CharacteriseSoilGammas& conf) {
             SetUserAction(new CRYPrimaryGeneratorAction("setupCry.file"));
-            SetUserAction(new TrackingAction());
+            SetUserAction(new TrackingAction(eventAction));
         },
-        [this](const TransportGammas& conf) {
-            SetUserAction(
-                new TransportPrimaryGeneratorAction(conf.spectraPath, soil)
-            );
+        [&, this](const TransportGammas& conf) {
+            SetUserAction(new TransportPrimaryGeneratorAction(
+                conf.spectraPath,
+                soil,
+                eventAction,
+                runAction
+            ));
         },
-        [this](const Detect& conf) {
-            SetUserAction(
-                new DetectionPrimaryGeneratorAction(conf.spectraPath)
-            );
+        [&, this](const Detect& conf) {
+            SetUserAction(new DetectionPrimaryGeneratorAction(
+                conf.spectraPath,
+                eventAction,
+                runAction
+            ));
         },
     };
 

@@ -23,9 +23,15 @@ class DetectorConstruction: public G4VUserDetectorConstruction
    * @param gcConfig Configuration information for the whole run
    */
     DetectorConstruction(const SoilConfig& soil, const GCConfig& gcConfig);
-    virtual ~DetectorConstruction();
-    virtual G4VPhysicalVolume* Construct();
-    virtual void ConstructSDandField();
+
+    ~DetectorConstruction() override;
+    DetectorConstruction(const DetectorConstruction&) = default;
+    DetectorConstruction(DetectorConstruction&&) = delete;
+    DetectorConstruction& operator=(const DetectorConstruction&) = default;
+    DetectorConstruction& operator=(DetectorConstruction&&) = delete;
+
+    G4VPhysicalVolume* Construct() override;
+    void ConstructSDandField() override;
 
   private:
     G4double soilCarbonPercentage;

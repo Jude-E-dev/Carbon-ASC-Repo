@@ -5,7 +5,9 @@
 #include <fstream>
 #include <random>
 
+#include "BinaryEntries.hh"
 #include "Configs.hh"
+#include "EventAction.hh"
 
 class G4Event;
 class G4ParticleTable;
@@ -26,12 +28,21 @@ class TransportPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction
    */
     TransportPrimaryGeneratorAction(
         const std::string& distributionPath,
-        const SoilConfig& soil
+        const SoilConfig& soil,
+        EventAction* eventAction,
+        RunAction* runAction
     );
-    ~TransportPrimaryGeneratorAction();
 
-  public:
-    void GeneratePrimaries(G4Event* anEvent);
+    ~TransportPrimaryGeneratorAction() override;
+    TransportPrimaryGeneratorAction(const TransportPrimaryGeneratorAction&) =
+        delete;
+    TransportPrimaryGeneratorAction(TransportPrimaryGeneratorAction&&) = delete;
+    TransportPrimaryGeneratorAction&
+    operator=(const TransportPrimaryGeneratorAction&) = delete;
+    TransportPrimaryGeneratorAction&
+    operator=(TransportPrimaryGeneratorAction&&) = delete;
+
+    void GeneratePrimaries(G4Event* anEvent) override;
 
     /**
      * @brief Get the amount of time that would need to pass to achieve this
@@ -42,6 +53,8 @@ class TransportPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction
     G4double GetExposureTime() const;
 
   private:
+    bool readEntry(TransportGammaEntry* out);
+
     SoilConfig soil;
     G4ParticleTable* particleTable;
     G4ParticleGun* gun;
@@ -52,4 +65,7 @@ class TransportPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction
     unsigned long eventsProcessed;
     unsigned long binFileNumEvents;
     G4double binFileExposure;
+
+    EventAction* eventAction;
+    RunAction* runAction;
 };

@@ -7,11 +7,13 @@
 
 #include "EventAction.hh"
 
+TrackingAction::TrackingAction(EventAction* eventAction)
+    : eventAction {eventAction}
+{
+}
+
 void TrackingAction::PreUserTrackingAction(const G4Track* track)
 {
-    const auto* runManager = G4RunManager::GetRunManager();
-    auto* eventAction = (EventAction*)runManager->GetUserEventAction();
-
     const G4int parentID = track->GetParentID();
     if (parentID == 0) { // primaries
         const G4int trackID = track->GetTrackID();
@@ -25,8 +27,8 @@ void TrackingAction::PreUserTrackingAction(const G4Track* track)
     else {
         eventAction->RegisterPrimary(
             track->GetTrackID(),
-            eventAction->GetPrimaryName(track),
-            eventAction->GetPrimaryPDG(track)
+            eventAction->GetPrimaryName(*track),
+            eventAction->GetPrimaryPDG(*track)
         );
     }
 }

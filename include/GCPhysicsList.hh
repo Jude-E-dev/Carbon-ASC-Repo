@@ -10,7 +10,9 @@ class GCPhysicsList: public G4VModularPhysicsList
 {
   public:
     GCPhysicsList(G4int ver = 1);
-    virtual ~GCPhysicsList() = default;
+    GCPhysicsList(GCPhysicsList&&) = delete;
+    GCPhysicsList& operator=(GCPhysicsList&&) = delete;
+    ~GCPhysicsList() override = default;
 
     GCPhysicsList(const GCPhysicsList&) = delete;
     GCPhysicsList& operator=(const GCPhysicsList& right) = delete;

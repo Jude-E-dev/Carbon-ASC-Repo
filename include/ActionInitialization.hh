@@ -21,10 +21,15 @@ class ActionInitialization: public G4VUserActionInitialization
         const GCConfig& config,
         G4int updatePeriod = 1000
     );
-    virtual ~ActionInitialization();
 
-    virtual void BuildForMaster() const;
-    virtual void Build() const;
+    ~ActionInitialization() override = default;
+    ActionInitialization(const ActionInitialization&) = default;
+    ActionInitialization(ActionInitialization&&) = delete;
+    ActionInitialization& operator=(const ActionInitialization&) = default;
+    ActionInitialization& operator=(ActionInitialization&&) = delete;
+
+    void BuildForMaster() const override;
+    void Build() const override;
 
   private:
     GCConfig config;

@@ -3,59 +3,75 @@
 #include <G4AnalysisManager.hh>
 #include <G4Event.hh>
 #include <G4RunManager.hh>
+#include <G4SDManager.hh>
 #include <G4String.hh>
+#include <G4SystemOfUnits.hh>
+#include <G4THitsCollection.hh>
 #include <G4Track.hh>
 #include <G4Types.hh>
 #include <G4ios.hh>
-#include <exception>
 #include <variant>
 
 #include "Configs.hh"
+#include "SensitiveDetector.hh"
 #include "TransportPrimaryGeneratorAction.hh"
 
 EventAction::EventAction(const GCConfig& config, G4int updatePeriod)
-    : G4UserEventAction()
-    , config {config}
+    : config {config}
     , updatePeriod {updatePeriod}
-    , primariesMap {}
-    , pdgsMap {}
 {
 }
 
 EventAction::~EventAction() {}
 
-void EventAction::BeginOfEventAction(const G4Event* ev)
+void EventAction::BeginOfEventAction(const G4Event* /*unused*/)
 {
     primariesMap.clear();
     pdgsMap.clear();
 }
 
-void EventAction::EndOfEventAction(const G4Event* ev)
+void EventAction::EndOfEventAction(const G4Event* event)
 {
-    G4int n = ev->GetEventID();
-    if (n % updatePeriod == 0) {
-        G4cout << ev->GetEventID() / 1000 << "k events completed." << G4endl;
+    G4int eventNum = event->GetEventID();
+    if (eventNum % updatePeriod == 0) {
+        G4cout << event->GetEventID() / 1000 << "k events completed." << G4endl;
     }
 
     if (std::holds_alternative<Detect>(config)) {
-        auto analysisManager = G4AnalysisManager::Instance();
-        G4int i = 0;
-        if (GetDetectionPulseEnergy() > 0.001) {
-            analysisManager->FillNtupleDColumn(i++, GetDetectionPulseEnergy());
+        auto* analysisManager = G4AnalysisManager::Instance();
+        auto* sdm = G4SDManager::GetSDMpointer();
+        G4int hcID = sdm->GetCollectionID("MeasurementSD/hits");
+        auto* hce = event->GetHCofThisEvent();
+        if (hce == nullptr) {
+            return;
+        }
+        auto* hitsCollection =
+            dynamic_cast<G4THitsCollection<DetectorHit>*>(hce->GetHC(hcID));
+        if (hitsCollection == nullptr) {
+            return;
+        }
+
+        G4double eDep = 0.0;
+        for (std::size_t i = 0; i < hitsCollection->GetSize(); ++i) {
+            eDep += (*hitsCollection)[i]->GetEdep();
+        }
+
+        G4int col = 0;
+        if (eDep > 1.0 * keV) {
+            analysisManager->FillNtupleDColumn(col++, eDep);
             analysisManager->FillNtupleDColumn(
-                i++,
+                col++,
                 GetDetectionStartingEnergyInSoil()
             );
-            analysisManager->FillNtupleIColumn(i++, GetDetectionSourcePDG());
-            analysisManager->FillNtupleDColumn(i++, GetDetectionSoilZ());
-            analysisManager->FillNtupleDColumn(i++, GetDetectionSoilRho());
+            analysisManager->FillNtupleIColumn(col++, GetDetectionSourcePDG());
+            analysisManager->FillNtupleDColumn(col++, GetDetectionSoilZ());
+            analysisManager->FillNtupleDColumn(col++, GetDetectionSoilRho());
             analysisManager->AddNtupleRow();
         }
     }
 
     SetSoilSourceProperties(0.0, 0.0, 0.0, 0);
     SetDetectionProperties(0.0, 0, 0.0, 0.0);
-    detectionPulseEnergy = 0.0;
 }
 
 void EventAction::RegisterPrimary(
@@ -68,38 +84,34 @@ void EventAction::RegisterPrimary(
     pdgsMap[trackID] = pdg;
 }
 
-G4String EventAction::GetPrimaryName(const G4Track* track) const
+G4String EventAction::GetPrimaryName(const G4Track& track) const
 {
-    G4String primary;
-    try {
-        primary = primariesMap.at(track->GetParentID());
+    auto primary = primariesMap.find(track.GetParentID());
+    if (primary != primariesMap.end()) {
+        return primary->second;
     }
-    catch (const std::exception& e) {
-        primary = e.what();
-    }
-    return primary;
+
+    return "unknown";
 }
 
-G4int EventAction::GetPrimaryPDG(const G4Track* track) const
+G4int EventAction::GetPrimaryPDG(const G4Track& track) const
 {
-    G4int primary;
-    try {
-        primary = pdgsMap.at(track->GetParentID());
+    auto primary = pdgsMap.find(track.GetParentID());
+    if (primary != pdgsMap.end()) {
+        return primary->second;
     }
-    catch (const std::exception&) {
-        primary = -1;
-    }
-    return primary;
+
+    return -1;
 }
 
 void EventAction::SetSoilSourceProperties(
-    G4double z,
+    G4double depth,
     G4double rho,
     G4double energy,
     G4int pdg
 )
 {
-    soilSourceZ = z;
+    soilSourceZ = depth;
     soilSourceRho = rho;
     soilSourceEnergy = energy;
     soilSourcePDG = pdg;
@@ -136,16 +148,6 @@ G4double EventAction::GetSoilSourceEnergy() const
 G4int EventAction::GetSoilSourcePDG() const
 {
     return soilSourcePDG;
-}
-
-void EventAction::DepositEnergy(G4double eDep)
-{
-    detectionPulseEnergy += eDep;
-}
-
-G4double EventAction::GetDetectionPulseEnergy() const
-{
-    return detectionPulseEnergy;
 }
 
 G4double EventAction::GetDetectionStartingEnergyInSoil() const

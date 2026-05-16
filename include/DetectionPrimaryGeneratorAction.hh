@@ -5,6 +5,9 @@
 #include <fstream>
 #include <random>
 
+#include "EventAction.hh"
+#include "RunAction.hh"
+
 class G4Event;
 class G4ParticleTable;
 class G4ParticleGun;
@@ -18,11 +21,22 @@ class DetectionPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction
    * @param distributionPath Path to the binary file from a soil
    * characterisation run.
    */
-    DetectionPrimaryGeneratorAction(const std::string& distributionPath);
-    ~DetectionPrimaryGeneratorAction();
+    DetectionPrimaryGeneratorAction(
+        const std::string& distributionPath,
+        EventAction* eventAction,
+        RunAction* runAction
+    );
 
-  public:
-    void GeneratePrimaries(G4Event* ev);
+    ~DetectionPrimaryGeneratorAction() override;
+    DetectionPrimaryGeneratorAction(const DetectionPrimaryGeneratorAction&) =
+        delete;
+    DetectionPrimaryGeneratorAction(DetectionPrimaryGeneratorAction&&) = delete;
+    DetectionPrimaryGeneratorAction&
+    operator=(const DetectionPrimaryGeneratorAction&) = delete;
+    DetectionPrimaryGeneratorAction&
+    operator=(DetectionPrimaryGeneratorAction&&) = delete;
+
+    void GeneratePrimaries(G4Event* event) override;
     /**
      * @brief Get the amount of time that would need to pass to achieve this
      * detection, in seconds
@@ -32,6 +46,9 @@ class DetectionPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction
     G4double GetExposureTime() const;
 
   private:
+    EventAction* eventAction;
+    RunAction* runAction;
+
     G4ParticleTable* particleTable;
     G4ParticleGun* gun;
     std::ifstream binFile;
@@ -40,4 +57,6 @@ class DetectionPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction
     unsigned long eventsProcessed;
     unsigned long binFileNumEvents;
     G4double binFileExposure;
+
+    bool readEntry(PreDetectorEntry* out);
 };

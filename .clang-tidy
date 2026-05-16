@@ -1,0 +1,16 @@
+Checks: >
+  -*,
+  bugprone-*,
+  cppcoreguidelines-*,
+  performance-*,
+  readability-*,
+  clang-analyzer-*,
+  -modernize-use-trailing-return-type,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -readability-math-missing-parentheses
+
+# WarningsAsErrors: '*'
+
+CheckOptions:
+  - key: modernize-loop-convert.MinConfidence
+    value: reasonable

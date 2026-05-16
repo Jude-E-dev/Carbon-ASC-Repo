@@ -17,13 +17,17 @@ class CRYPrimaryGeneratorAction: public G4VUserPrimaryGeneratorAction
 {
   public:
     CRYPrimaryGeneratorAction(const char* filename);
-    ~CRYPrimaryGeneratorAction();
 
-  public:
-    void GeneratePrimaries(G4Event* anEvent);
+    ~CRYPrimaryGeneratorAction() override = default;
+    CRYPrimaryGeneratorAction(const CRYPrimaryGeneratorAction&) = default;
+    CRYPrimaryGeneratorAction(CRYPrimaryGeneratorAction&&) = delete;
+    CRYPrimaryGeneratorAction& operator=(const CRYPrimaryGeneratorAction&) = default;
+    CRYPrimaryGeneratorAction& operator=(CRYPrimaryGeneratorAction&&) = delete;
+
+    void GeneratePrimaries(G4Event* anEvent) override;
     void InputCRY();
     void UpdateCRY(G4String* MessInput);
-    void CRYFromFile(G4String newValue);
+    void CRYFromFile(const G4String& newValue);
     G4double GetExposureTime() const;
 
   private:

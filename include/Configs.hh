@@ -3,6 +3,7 @@
 #include <G4String.hh>
 #include <G4Types.hh>
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <variant>
 
@@ -14,7 +15,7 @@ struct SoilConfig
     G4double soilWidth;
 };
 
-enum class OutputTypes
+enum class OutputTypes : std::uint8_t
 {
     INFO,
     BINARY,

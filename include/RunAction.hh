@@ -16,10 +16,15 @@ class RunAction: public G4UserRunAction
 {
   public:
     RunAction(const GCConfig& config);
-    ~RunAction();
 
-    void BeginOfRunAction(const G4Run*) override;
-    void EndOfRunAction(const G4Run*) override;
+    RunAction(const RunAction&) = delete;
+    RunAction(RunAction&&) = delete;
+    RunAction& operator=(const RunAction&) = delete;
+    RunAction& operator=(RunAction&&) = delete;
+    ~RunAction() override = default;
+
+    void BeginOfRunAction(const G4Run* /*unused*/) override;
+    void EndOfRunAction(const G4Run* /*unused*/) override;
 
     /**
      * @brief Tally information during a characterisation event. These will all
@@ -33,7 +38,7 @@ class RunAction: public G4UserRunAction
     void TallySoilGammaBinary(
         G4double energy,
         G4double momentumZ,
-        G4double z,
+        G4double depth,
         G4int pdg
     );
 
@@ -63,7 +68,7 @@ class RunAction: public G4UserRunAction
      */
     void TallyDetectorSurfaceBinary(
         G4int pdg,
-        G4double z,
+        G4double depth,
         G4double rho,
         G4double energy,
         G4double momentumZ,
@@ -75,12 +80,15 @@ class RunAction: public G4UserRunAction
         G4double rhoInSoil
     );
 
-    void IncrementTransportExposure(G4double dt);
-    void IncrementDetectionExposure(G4double dt);
+    void IncrementTransportExposure(G4double deltaTime);
+    void IncrementDetectionExposure(G4double deltaTime);
     G4double GetTransportExposure() const;
     G4double GetDetectionExposure() const;
 
   private:
+    void writeSoilEntries(G4double exposure);
+    void writePreDetectorEntries(G4double exposure);
+
     std::chrono::steady_clock::time_point startTime;
     GCConfig config;
 

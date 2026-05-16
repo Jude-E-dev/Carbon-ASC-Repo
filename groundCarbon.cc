@@ -18,6 +18,9 @@
  * 
  */
 
+#include <math.h>
+
+#include <G4EnvironmentUtils.hh>
 #include <G4RandomTools.hh>
 #include <G4RunManagerFactory.hh>
 #include <G4SystemOfUnits.hh>
@@ -57,9 +60,9 @@ int main(int argc, char* argv[])
     }
 
     auto soilConfig = SoilConfig {0.15, 16, 50 * cm, 5 * m}; // smaller volume
-    std::string num_runs = "";
+    std::string num_runs;
     G4int updatePeriod = 1000;
-    OutputTypes outputTypes;
+    OutputTypes outputTypes {};
     if (args[2] == "info") {
         outputTypes = OutputTypes::INFO;
     }
@@ -84,8 +87,9 @@ int main(int argc, char* argv[])
     else if (args[1] == "transport") {
         updatePeriod = 50000;
         G4cout << "args: " << args.size() << G4endl;
-        if (args.size() < 4)
+        if (args.size() < 4) {
             return invalidArguments();
+        }
         gcConfig = TransportGammas {args[3], "csv", "transport", outputTypes};
         if (args.size() == 5) {
             num_runs = args[4];
@@ -93,8 +97,9 @@ int main(int argc, char* argv[])
     }
     else if (args[1] == "detect") {
         updatePeriod = 50000;
-        if (args.size() < 4)
+        if (args.size() < 4) {
             return invalidArguments();
+        }
         gcConfig = Detect {args[3], "csv", "detector", outputTypes};
         if (args.size() == 5) {
             num_runs = args[4];
@@ -111,11 +116,11 @@ int main(int argc, char* argv[])
         ui = new G4UIExecutive(argc, argv);
     }
 
-    std::random_device rd;
+    std::random_device rand;
     G4Random::setTheEngine(new CLHEP::RanecuEngine);
-    G4Random::setTheSeed(rd());
+    G4Random::setTheSeed(rand());
 
-    auto runManager =
+    auto* runManager =
         G4RunManagerFactory::CreateRunManager(G4RunManagerType::SerialOnly);
     runManager->SetUserInitialization(
         new DetectorConstruction(soilConfig, gcConfig)
@@ -125,13 +130,13 @@ int main(int argc, char* argv[])
         new ActionInitialization(soilConfig, gcConfig, updatePeriod)
     );
 
-    auto visManager = new G4VisExecutive(argc, argv);
+    auto* visManager = new G4VisExecutive(argc, argv);
     visManager->Initialize();
 
-    auto UImanager = G4UImanager::GetUIpointer();
+    auto* UImanager = G4UImanager::GetUIpointer();
     UImanager->ApplyCommand("/control/macroPath macros");
 
-    if (!ui) {
+    if (ui == nullptr) {
         // batch mode
         UImanager->ApplyCommand("/run/initialize ");
         UImanager->ApplyCommand("/run/beamOn " + num_runs);
@@ -147,7 +152,6 @@ int main(int argc, char* argv[])
     delete runManager;
 }
 
-
 /**
  * @brief Merge binary outputs from runs. The first 8 bytes of these files
  * contain the exposure time of the run; this will handle adding these together
@@ -161,13 +165,17 @@ void mergeBinaries(const std::vector<std::string>& args)
     G4double totalExposure = 0.0;
     for (size_t i = 3; i < args.size(); i++) {
         std::ifstream spectrum(args[i], std::ios::in | std::ios::binary);
-        if (!spectrum.is_open())
+        if (!spectrum.is_open()) {
             continue;
+        }
 
-        G4double exposure;
+        G4double exposure = NAN;
         spectrum.read(reinterpret_cast<char*>(&exposure), sizeof(G4double));
         totalExposure += exposure;
         spectrum.close();
+
+        G4cout << "Read file \'" << args[i] << "\' with exposure " << exposure
+               << "s." << G4endl;
     }
 
     // Merge files
@@ -175,8 +183,9 @@ void mergeBinaries(const std::vector<std::string>& args)
     out.write(reinterpret_cast<const char*>(&totalExposure), sizeof(G4double));
     for (size_t i = 3; i < args.size(); i++) {
         std::ifstream spectrum(args[i], std::ios::in | std::ios::binary);
-        if (!spectrum.is_open())
+        if (!spectrum.is_open()) {
             continue;
+        }
 
         spectrum.seekg(sizeof(G4double), std::ios::beg);
 
@@ -188,6 +197,9 @@ void mergeBinaries(const std::vector<std::string>& args)
             out.write(buffer, spectrum.gcount());
         }
     }
+
+    G4cout << "Wrote file \'" << args[2] << "\' with exposure " << totalExposure
+           << G4endl;
     out.close();
 }
 

@@ -11,9 +11,16 @@ class CRYPrimaryGeneratorMessenger: public G4UImessenger
 {
   public:
     CRYPrimaryGeneratorMessenger(CRYPrimaryGeneratorAction*);
-    ~CRYPrimaryGeneratorMessenger();
 
-    void SetNewValue(G4UIcommand*, G4String);
+    CRYPrimaryGeneratorMessenger(const CRYPrimaryGeneratorMessenger&) = default;
+    CRYPrimaryGeneratorMessenger(CRYPrimaryGeneratorMessenger&&) = delete;
+    CRYPrimaryGeneratorMessenger&
+    operator=(const CRYPrimaryGeneratorMessenger&) = default;
+    CRYPrimaryGeneratorMessenger&
+    operator=(CRYPrimaryGeneratorMessenger&&) = delete;
+    ~CRYPrimaryGeneratorMessenger() override;
+
+    void SetNewValue(G4UIcommand* /*command*/, G4String /*newValue*/) override;
 
   private:
     CRYPrimaryGeneratorAction* Action;

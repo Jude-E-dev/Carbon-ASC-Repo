@@ -29,7 +29,7 @@ struct PreDetectorEntry
 {
     G4int pdg;
 
-    G4double z;
+    G4double depth;
     G4double rho;
 
     G4double energy;

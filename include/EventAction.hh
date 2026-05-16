@@ -25,10 +25,14 @@ class EventAction: public G4UserEventAction
    */
     EventAction(const GCConfig& config, G4int updatePeriod);
 
-    virtual ~EventAction();
+    ~EventAction() override;
+    EventAction(const EventAction&) = default;
+    EventAction(EventAction&&) = delete;
+    EventAction& operator=(const EventAction&) = default;
+    EventAction& operator=(EventAction&&) = delete;
 
-    virtual void BeginOfEventAction(const G4Event* event);
-    virtual void EndOfEventAction(const G4Event* event);
+    void BeginOfEventAction(const G4Event* event) override;
+    void EndOfEventAction(const G4Event* event) override;
 
     /**
      * @brief Register the name and PDG of the cosmic ray primary that the
@@ -50,7 +54,7 @@ class EventAction: public G4UserEventAction
      * @return G4String The cosmic ray primary. If no primary is registered to
      * this track, an error string will be returned
      */
-    G4String GetPrimaryName(const G4Track* track) const;
+    G4String GetPrimaryName(const G4Track& track) const;
 
     /**
      * @brief Get the PDG of the original cosmic ray primary that led to the
@@ -60,7 +64,7 @@ class EventAction: public G4UserEventAction
      * @return G4int The cosmic ray primary. If no primary is registered to
      * this track, -1 will be returned
      */
-    G4int GetPrimaryPDG(const G4Track* track) const;
+    G4int GetPrimaryPDG(const G4Track& track) const;
 
     /**
      * @brief Store information about the gamma ray being replayed in this
@@ -74,7 +78,7 @@ class EventAction: public G4UserEventAction
      * ray being produced
      */
     void SetSoilSourceProperties(
-        G4double z,
+        G4double depth,
         G4double rho,
         G4double energy,
         G4int pdg
@@ -155,7 +159,7 @@ class EventAction: public G4UserEventAction
      * @return G4double The depth of the gamma ray at production in the soil
      */
     G4double GetDetectionSoilZ() const;
-    
+
     /**
      * @brief Get the distance from the z-axis of the gamma ray that led to the
      * track being simulated, when it was produced in the soil
@@ -165,20 +169,20 @@ class EventAction: public G4UserEventAction
      */
     G4double GetDetectionSoilRho() const;
 
-    /**
-     * @brief Deposit energy in the detector during a 'detect' run. This is
-     * accumulated across an event
-     * 
-     * @param eDep The energy to deposit
-     */
-    void DepositEnergy(G4double eDep);
+    // /**
+    //  * @brief Deposit energy in the detector during a 'detect' run. This is
+    //  * accumulated across an event
+    //  * 
+    //  * @param eDep The energy to deposit
+    //  */
+    // void DepositEnergy(G4double eDep);
 
-    /**
-     * @brief Get the energy of the detector pulse from the current event
-     * 
-     * @return G4double The energy of the detector pulse
-     */
-    G4double GetDetectionPulseEnergy() const;
+    // /**
+    //  * @brief Get the energy of the detector pulse from the current event
+    //  * 
+    //  * @return G4double The energy of the detector pulse
+    //  */
+    // G4double GetDetectionPulseEnergy() const;
 
   private:
     GCConfig config;
@@ -197,5 +201,5 @@ class EventAction: public G4UserEventAction
     G4int detectionSourcePDG = 0;
     G4double detectionZInSoil = 0.0;
     G4double detectionRhoInSoil = 0.0;
-    G4double detectionPulseEnergy = 0.0;
+    // G4double detectionPulseEnergy = 0.0;
 };
