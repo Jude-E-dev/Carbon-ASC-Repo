@@ -92,8 +92,8 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
                 || conf.outputTypes == OutputTypes::ALL) {
                 runAction->TallySoilGammaBinary(
                     energy,
-                    pos.getZ(),
                     momentumDir.getZ(),
+                    pos.getZ(),
                     eventAction->GetPrimaryPDG(*track)
                 );
             }

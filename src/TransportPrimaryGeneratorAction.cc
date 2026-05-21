@@ -40,9 +40,9 @@ TransportPrimaryGeneratorAction::TransportPrimaryGeneratorAction(
     , runAction {runAction}
 {
     if (!binFile) {
-        G4cerr << "Unable to open distribution file: " << distributionPath
-               << G4endl;
-        std::exit(EXIT_FAILURE);
+        throw std::runtime_error(
+            "Unable to open .bin file: " + distributionPath
+        );
     }
 
     binFileNumEvents = (static_cast<G4long>(binFile.tellg()) - sizeof(G4double))
