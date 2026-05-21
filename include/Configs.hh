@@ -7,9 +7,14 @@
 #include <string>
 #include <variant>
 
+/**
+ * @brief The configuration details of the simulation soil.
+ * 
+ */
 struct SoilConfig
 {
     G4double soilCarbonPercentage;
+    /// @brief The number of subdivisions if the depth were infinite.
     std::size_t soilCarbonSubdivisions;
     G4double soilDepth;
     G4double soilWidth;

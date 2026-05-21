@@ -1,6 +1,7 @@
 #include "SteppingAction.hh"
 
 #include <G4AnalysisManager.hh>
+#include <G4Gamma.hh>
 #include <G4LogicalVolume.hh>
 #include <G4ParticleDefinition.hh>
 #include <G4ParticleMomentum.hh>
@@ -18,9 +19,13 @@
 
 #include "Configs.hh"
 #include "EventAction.hh"
-#include "GCConstants.hh"
 #include "RunAction.hh"
 #include "overloaded.hh"
+
+namespace
+{
+constexpr G4double MIN_RECORDING_ENERGY = 0.3 * MeV;
+}
 
 SteppingAction::SteppingAction(
     const GCConfig& config,
@@ -37,7 +42,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 {
     auto visitor = overloaded {
         [step, this](const CharacteriseSoilGammas& conf) {
-            G4Track* track = step->GetTrack();
+            auto* track = step->GetTrack();
 
             // skip primaries
             const G4VProcess* creator = track->GetCreatorProcess();
@@ -46,15 +51,16 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
             }
 
             const G4int stepNum = track->GetCurrentStepNumber();
-            const G4ParticleDefinition* particleDef =
-                track->GetParticleDefinition();
+            const auto* particleDef = track->GetParticleDefinition();
 
             // only record gamma secondaries on their first step
-            if (particleDef->GetPDGEncoding() != GAMMA_PDG || stepNum != 1) {
+            if (particleDef->GetPDGEncoding()
+                    != G4Gamma::GammaDefinition()->GetPDGEncoding()
+                || stepNum != 1) {
                 return;
             }
 
-            const G4StepPoint* point = step->GetPreStepPoint();
+            const auto* point = step->GetPreStepPoint();
             const G4ThreeVector pos = point->GetPosition();
 
             if (pos.getZ() > 0.0) {
@@ -65,7 +71,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
             const G4ThreeVector momentumDir = point->GetMomentumDirection();
 
             // Skip low energy emissions
-            if (energy < 0.3 * MeV) {
+            if (energy < MIN_RECORDING_ENERGY) {
                 return;
             }
 

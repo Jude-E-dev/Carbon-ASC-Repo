@@ -59,7 +59,8 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    auto soilConfig = SoilConfig {0.15, 16, 50 * cm, 5 * m}; // smaller volume
+    const auto soilConfig =
+        SoilConfig {0.15, 16, 50 * cm, 5 * m}; // smaller volume
     std::string num_runs;
     G4int updatePeriod = 1000;
     OutputTypes outputTypes {};
@@ -79,7 +80,7 @@ int main(int argc, char* argv[])
     GCConfig gcConfig;
     if (args[1] == "soil-character") {
         gcConfig =
-            CharacteriseSoilGammas {"csv", "soil-character", outputTypes};
+            CharacteriseSoilGammas {"csv", "soil-character-15pc", outputTypes};
         if (args.size() == 4) {
             num_runs = args[3];
         }

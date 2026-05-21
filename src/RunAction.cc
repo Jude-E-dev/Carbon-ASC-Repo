@@ -303,7 +303,7 @@ G4double RunAction::GetDetectionExposure() const
     return detectionExposure;
 }
 
-void RunAction::writeSoilEntries(G4double exposure)
+void RunAction::writePreDetectorEntries(G4double exposure)
 {
     preDetectorBinFile.write(
         reinterpret_cast<const char*>(&exposure),
@@ -357,7 +357,7 @@ void RunAction::writeSoilEntries(G4double exposure)
     }
 }
 
-void RunAction::writePreDetectorEntries(G4double exposure)
+void RunAction::writeSoilEntries(G4double exposure)
 {
     soilBinFile.write(
         reinterpret_cast<const char*>(&exposure),

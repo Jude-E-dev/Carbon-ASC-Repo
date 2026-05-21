@@ -18,7 +18,7 @@ struct TransportGammaEntry
  * @brief The number of bytes in a TransportGammaEntry as stored in .bin files.
  * 
  */
-constexpr auto TRANSPORT_GAMMA_ENTRY_SIZE =
+inline constexpr auto TRANSPORT_GAMMA_ENTRY_SIZE =
     3 * sizeof(G4double) + 2 * sizeof(G4int);
 
 /**
@@ -47,5 +47,5 @@ struct PreDetectorEntry
  * @brief The number of bytes in a PreDetectorEntry as stored in .bin files.
  * 
  */
-constexpr auto PRE_DETECTOR_ENTRY_SIZE =
+inline constexpr auto PRE_DETECTOR_ENTRY_SIZE =
     9 * sizeof(G4double) + 2 * sizeof(G4int);

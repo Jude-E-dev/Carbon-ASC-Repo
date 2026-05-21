@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include <G4Event.hh>
+#include <G4Gamma.hh>
 #include <G4ParticleGun.hh>
 #include <G4ParticleMomentum.hh>
 #include <G4ParticleTable.hh>
@@ -18,7 +19,6 @@
 
 #include "BinaryEntries.hh"
 #include "Configs.hh"
-#include "GCConstants.hh"
 #include "RunAction.hh"
 
 TransportPrimaryGeneratorAction::TransportPrimaryGeneratorAction(
@@ -29,7 +29,7 @@ TransportPrimaryGeneratorAction::TransportPrimaryGeneratorAction(
 )
     : soil {soil}
     , particleTable {G4ParticleTable::GetParticleTable()}
-    , gun {new G4ParticleGun}
+    , gun {new G4ParticleGun()}
     , binFile(distributionPath, std::ios::binary | std::ios::in | std::ios::ate)
     , rng {std::random_device {}()}
     , azimuthDist(0.0, CLHEP::twopi)
@@ -104,7 +104,7 @@ void TransportPrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
         ->SetSoilSourceProperties(entry.z, rho, entry.energy, entry.sourcePDG);
     runAction->IncrementTransportExposure(binFileExposure);
 
-    gun->SetParticleDefinition(particleTable->FindParticle(GAMMA_PDG));
+    gun->SetParticleDefinition(G4Gamma::Definition());
     gun->SetParticleEnergy(entry.energy);
     gun->SetParticleMomentumDirection(momentum);
     gun->SetParticlePosition(pos);

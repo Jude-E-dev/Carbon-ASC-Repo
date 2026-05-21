@@ -19,6 +19,13 @@
 #include "Configs.hh"
 #include "SensitiveDetector.hh"
 
+namespace
+{
+constexpr G4double DETECTOR_RADIUS = 8.3 * cm;
+constexpr G4double DETECTOR_HEIGHT = 16.8 * cm;
+constexpr G4double DETECTOR_ELEVATION = 20 * cm;
+} // namespace
+
 DetectorConstruction::DetectorConstruction(
     const SoilConfig& soil,
     const GCConfig& gcConfig
@@ -116,8 +123,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
         auto* detectorCylinder = new G4Tubs(
             "SolidDetector",
             0.0,
-            8.3 * cm,
-            16.8 * cm,
+            DETECTOR_RADIUS,
+            DETECTOR_HEIGHT,
             0.0,
             CLHEP::twopi
         );
@@ -127,7 +134,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
         new G4PVPlacement(
             nullptr,
-            G4ThreeVector(0.0, 0.0, 20 * cm + 16.8 * cm / 2.0),
+            G4ThreeVector(0.0, 0.0, DETECTOR_ELEVATION + DETECTOR_RADIUS / 2),
             "PhysicalDetector",
             logicalDetector,
             physWorld,
@@ -230,23 +237,21 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
         auto* solidLayer = new G4Box(
             nameSolid,
-            0.5 * soilWidth,
-            0.5 * soilWidth,
-            0.5 * (zTop - zBottom)
+            soilWidth / 2,
+            soilWidth / 2,
+            (zTop - zBottom) / 2
         );
 
         soilLogicalLayers[i] =
             new G4LogicalVolume(solidLayer, soilMixture, nameLogical);
 
-        const G4double t = 0.8 + 0.5 * (carbonVolumeFraction / 0.15);
-        auto* visSoil =
-            new G4VisAttributes(G4Colour(0.74 * t, 0.55 * t, 0.45 * t, 1.0));
+        auto* visSoil = new G4VisAttributes();
         visSoil->SetForceWireframe(true);
         soilLogicalLayers[i]->SetVisAttributes(visSoil);
 
         new G4PVPlacement(
             nullptr,
-            G4ThreeVector(0, 0, 0.5 * (zTop + zBottom)),
+            G4ThreeVector(0, 0, (zTop + zBottom) / 2),
             soilLogicalLayers[i],
             namePhysical,
             logicWorld,
@@ -267,8 +272,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 void DetectorConstruction::ConstructSDandField()
 {
     if (std::holds_alternative<Detect>(config)) {
-        auto* sd = new SensitiveDetector("MeasurementSD");
-        G4SDManager::GetSDMpointer()->AddNewDetector(sd);
-        logicalDetector->SetSensitiveDetector(sd);
+        auto* detector = new SensitiveDetector("MeasurementSD");
+        G4SDManager::GetSDMpointer()->AddNewDetector(detector);
+        logicalDetector->SetSensitiveDetector(detector);
     }
 }

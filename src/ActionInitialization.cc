@@ -13,6 +13,14 @@
 #include "TransportPrimaryGeneratorAction.hh"
 #include "overloaded.hh"
 
+namespace
+{
+constexpr std::string_view CRY_DATA_PATH {
+    "/Users/justjayiguess/Documents/Geant4/libs/cry_v1.7/data"
+};
+constexpr std::string_view CRY_SETUP_PATH {"setupCry.file"};
+} // namespace
+
 ActionInitialization::ActionInitialization(
     const SoilConfig& soil,
     const GCConfig& config,
@@ -39,7 +47,9 @@ void ActionInitialization::Build() const
 
     auto visitor = overloaded {
         [&, this](const CharacteriseSoilGammas& conf) {
-            SetUserAction(new CRYPrimaryGeneratorAction("setupCry.file"));
+            SetUserAction(
+                new CRYPrimaryGeneratorAction(CRY_SETUP_PATH, CRY_DATA_PATH)
+            );
             SetUserAction(new TrackingAction(eventAction));
         },
         [&, this](const TransportGammas& conf) {

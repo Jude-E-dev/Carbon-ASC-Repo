@@ -4,70 +4,70 @@
 #include <CRYSetup.h>
 
 #include <G4Event.hh>
+#include <G4ParticleGun.hh>
+#include <G4ParticleTable.hh>
 #include <G4String.hh>
 #include <G4SystemOfUnits.hh>
 #include <G4Types.hh>
+#include <G4ios.hh>
 #include <fstream>
+#include <sstream>
+#include <string_view>
 
-#include "GCConstants.hh"
 #include "RNGWrapper.hh"
 
-//----------------------------------------------------------------------------//
-CRYPrimaryGeneratorAction::CRYPrimaryGeneratorAction(const char* inputfile)
+CRYPrimaryGeneratorAction::CRYPrimaryGeneratorAction(
+    std::string_view crySetupPath,
+    std::string_view cryDataPath
+)
     : particleGun(new G4ParticleGun())
+    , cryDataPath(cryDataPath)
+    , particles(0)
+    , particleTable(G4ParticleTable::GetParticleTable())
+    , gunMessenger(new CRYPrimaryGeneratorMessenger(this))
 {
-    // define a particle gun
-
-    // Read the cry input file
-    std::ifstream inputFile;
-    inputFile.open(inputfile, std::ios::in);
-    char buffer[1000];
-
-    if (inputFile.fail()) {
-        if (*inputfile != 0) //....only complain if a filename was given
-            G4cout << "PrimaryGeneratorAction: Failed to open CRY input file= "
-                   << inputfile << G4endl;
-        InputState = -1;
+    if (crySetupPath.empty()) {
+        inputState = -1;
+        return;
     }
-    else {
-        G4String setupString("");
-        while (!inputFile.getline(buffer, 1000).eof()) {
-            setupString.append(buffer);
-            setupString.append(" ");
-        }
 
-        CRYSetup* setup = new CRYSetup(setupString, CRY_DATA_PATH);
+    std::ifstream inputFile {std::string(crySetupPath)};
 
-        gen = new CRYGenerator(setup);
-
-        // set random number generator
-        RNGWrapper<CLHEP::HepRandomEngine>::set(
-            CLHEP::HepRandom::getTheEngine(),
-            &CLHEP::HepRandomEngine::flat
-        );
-        setup->setRandomFunction(RNGWrapper<CLHEP::HepRandomEngine>::rng);
-        InputState = 0;
+    if (!inputFile) {
+        G4cout << "PrimaryGeneratorAction: Failed to open CRY input file: "
+               << crySetupPath << G4endl;
+        inputState = -1;
+        return;
     }
-    // create a vector to store the CRY particle properties
-    vect = new std::vector<CRYParticle*>;
 
-    // Create the table containing all particle names
-    particleTable = G4ParticleTable::GetParticleTable();
+    std::stringstream setupStream;
+    std::string line;
+    // Cry setup parser is picky
+    while (std::getline(inputFile, line)) {
+        setupStream << line << ' ';
+    }
+    const auto setupString = setupStream.str();
 
-    // Create the messenger file
-    gunMessenger = new CRYPrimaryGeneratorMessenger(this);
+    auto* setup = new CRYSetup(setupString, std::string(cryDataPath));
+    gen = new CRYGenerator(setup);
+
+    RNGWrapper<CLHEP::HepRandomEngine>::set(
+        CLHEP::HepRandom::getTheEngine(),
+        &CLHEP::HepRandomEngine::flat
+    );
+    setup->setRandomFunction(RNGWrapper<CLHEP::HepRandomEngine>::rng);
+
+    inputState = 0;
 }
 
-//----------------------------------------------------------------------------//
 void CRYPrimaryGeneratorAction::InputCRY()
 {
-    InputState = 1;
+    inputState = 1;
 }
 
-//----------------------------------------------------------------------------//
-void CRYPrimaryGeneratorAction::UpdateCRY(G4String* MessInput)
+void CRYPrimaryGeneratorAction::UpdateCRY(G4String* input)
 {
-    CRYSetup* setup = new CRYSetup(*MessInput, CRY_DATA_PATH);
+    auto* setup = new CRYSetup(*input, cryDataPath);
 
     gen = new CRYGenerator(setup);
 
@@ -77,74 +77,68 @@ void CRYPrimaryGeneratorAction::UpdateCRY(G4String* MessInput)
         &CLHEP::HepRandomEngine::flat
     );
     setup->setRandomFunction(RNGWrapper<CLHEP::HepRandomEngine>::rng);
-    InputState = 0;
+    inputState = 0;
 }
 
-//----------------------------------------------------------------------------//
-void CRYPrimaryGeneratorAction::CRYFromFile(const G4String& newValue)
+void CRYPrimaryGeneratorAction::CRYFromFile(const G4String& newPath)
 {
     // Read the cry input file
-    std::ifstream inputFile;
-    inputFile.open(newValue, std::ios::in);
-    char buffer[1000];
+    std::ifstream inputFile {newPath};
 
-    if (inputFile.fail()) {
-        G4cout << "Failed to open input file " << newValue << G4endl;
-        G4cout << "Make sure to define the cry library on the command line"
-               << G4endl;
-        InputState = -1;
+    if (!inputFile) {
+        G4cout << "PrimaryGeneratorAction: Failed to open CRY input file: "
+               << newPath << G4endl;
+        inputState = -1;
+        return;
     }
-    else {
-        G4String setupString("");
-        while (!inputFile.getline(buffer, 1000).eof()) {
-            setupString.append(buffer);
-            setupString.append(" ");
-        }
 
-        CRYSetup* setup = new CRYSetup(setupString, CRY_DATA_PATH);
-
-        gen = new CRYGenerator(setup);
-
-        // set random number generator
-        RNGWrapper<CLHEP::HepRandomEngine>::set(
-            CLHEP::HepRandom::getTheEngine(),
-            &CLHEP::HepRandomEngine::flat
-        );
-        setup->setRandomFunction(RNGWrapper<CLHEP::HepRandomEngine>::rng);
-        InputState = 0;
+    std::stringstream setupStream;
+    std::string line;
+    // Cry setup parser is picky
+    while (std::getline(inputFile, line)) {
+        setupStream << line << ' ';
     }
+    const auto setupString = setupStream.str();
+
+    auto* setup = new CRYSetup(setupString, std::string(cryDataPath));
+    gen = new CRYGenerator(setup);
+
+    // set random number generator
+    RNGWrapper<CLHEP::HepRandomEngine>::set(
+        CLHEP::HepRandom::getTheEngine(),
+        &CLHEP::HepRandomEngine::flat
+    );
+    setup->setRandomFunction(RNGWrapper<CLHEP::HepRandomEngine>::rng);
+    inputState = 0;
 }
 
-//----------------------------------------------------------------------------//
 void CRYPrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
 {
-    if (InputState != 0) {
-        G4String* str =
-            new G4String("CRY library was not successfully initialized");
-        G4Exception("PrimaryGeneratorAction", "1", RunMustBeAborted, *str);
+    if (inputState != 0) {
+        G4String str = "CRY library was not successfully initialized";
+        G4Exception("PrimaryGeneratorAction", "1", RunMustBeAborted, str);
     }
-    G4String particleName;
-    vect->clear();
-    gen->genEvent(vect);
+    particles.clear();
+    gen->genEvent(&particles);
 
-    for (size_t j = 0; j < vect->size(); j++) {
-        particleName = CRYUtils::partName((*vect)[j]->id());
-
+    for (size_t j = 0; j < particles.size(); j++) {
         particleGun->SetParticleDefinition(
-            particleTable->FindParticle((*vect)[j]->PDGid())
+            particleTable->FindParticle(particles[j]->PDGid())
         );
-        particleGun->SetParticleEnergy((*vect)[j]->ke() * MeV);
+        particleGun->SetParticleEnergy(particles[j]->ke() * MeV);
         particleGun->SetParticlePosition(G4ThreeVector(
-            (*vect)[j]->x() * m,
-            (*vect)[j]->y() * m,
-            (*vect)[j]->z() * m
+            particles[j]->x() * m,
+            particles[j]->y() * m,
+            particles[j]->z() * m
         ));
-        particleGun->SetParticleMomentumDirection(
-            G4ThreeVector((*vect)[j]->u(), (*vect)[j]->v(), (*vect)[j]->w())
-        );
-        particleGun->SetParticleTime((*vect)[j]->t());
+        particleGun->SetParticleMomentumDirection(G4ThreeVector(
+            particles[j]->u(),
+            particles[j]->v(),
+            particles[j]->w()
+        ));
+        particleGun->SetParticleTime(particles[j]->t());
         particleGun->GeneratePrimaryVertex(event);
-        delete (*vect)[j];
+        delete particles[j];
     }
 }
 
