@@ -2,6 +2,7 @@
 
 #include <G4UserRunAction.hh>
 #include <fstream>
+#include <chrono>
 
 #include "BinaryEntries.hh"
 #include "Configs.hh"
