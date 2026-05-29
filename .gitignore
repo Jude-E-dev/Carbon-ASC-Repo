@@ -4,3 +4,5 @@ analysis/archive/
 analysis/.venv/
 .DS_Store
 .cache/
+finals/
+ai-transcript/

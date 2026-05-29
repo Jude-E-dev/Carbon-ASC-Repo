@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
     GCConfig gcConfig;
     if (args[1] == "soil-character") {
         gcConfig =
-            CharacteriseSoilGammas {"csv", "/scratch/jej103/soil-character-15pc-all", outputTypes};
+            CharacteriseSoilGammas {"csv", "soil-character-15pc-all", outputTypes};
         if (args.size() == 4) {
             num_runs = args[3];
         }
@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
         if (args.size() < 4) {
             return invalidArguments();
         }
-        gcConfig = TransportGammas {args[3], "csv", "/scratch/jej103/transport-15pc-all", outputTypes};
+        gcConfig = TransportGammas {args[3], "csv", "transport-15pc-all", outputTypes};
         if (args.size() == 5) {
             num_runs = args[4];
         }
@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
         if (args.size() < 4) {
             return invalidArguments();
         }
-        gcConfig = Detect {args[3], "csv", "/scratch/jej103/detector-15pc-all", outputTypes};
+        gcConfig = Detect {args[3], "csv", "detector-15pc-all", outputTypes};
         if (args.size() == 5) {
             num_runs = args[4];
         }
