@@ -19,7 +19,7 @@ struct TransportGammaEntry
  * 
  */
 inline constexpr auto TRANSPORT_GAMMA_ENTRY_SIZE =
-    3 * sizeof(G4double) + 2 * sizeof(G4int);
+    3 * sizeof(G4double) + 1 * sizeof(G4int);
 
 /**
  * @brief An entry containing information about a particle that is about to intersect the detector.

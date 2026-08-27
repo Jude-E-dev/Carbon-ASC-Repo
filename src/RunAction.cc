@@ -12,6 +12,7 @@
 #include "CRYPrimaryGeneratorAction.hh"
 #include "Configs.hh"
 #include "DetectionPrimaryGeneratorAction.hh"
+#include "NORMPrimaryGeneratorAction.hh"
 #include "TransportPrimaryGeneratorAction.hh"
 #include "overloaded.hh"
 
@@ -171,12 +172,24 @@ void RunAction::EndOfRunAction(const G4Run* /*unused*/)
             }
 
             const auto* runManager = G4RunManager::GetRunManager();
-            const auto* generatorAction =
-                dynamic_cast<const CRYPrimaryGeneratorAction*>(
-                    runManager->GetUserPrimaryGeneratorAction()
-                );
+            const auto* primaryGeneratorAction =
+                runManager->GetUserPrimaryGeneratorAction();
 
-            const G4double exposure = generatorAction->GetExposureTime();
+            G4double exposure = 0.0;
+            if (conf.source == PrimarySource::Cosmogenic) {
+                const auto* generatorAction =
+                    dynamic_cast<const CRYPrimaryGeneratorAction*>(
+                        primaryGeneratorAction
+                    );
+                exposure = generatorAction->GetExposureTime();
+            }
+            else {
+                const auto* generatorAction =
+                    dynamic_cast<const NORMPrimaryGeneratorAction*>(
+                        primaryGeneratorAction
+                    );
+                exposure = generatorAction->GetExposureTime();
+            }
 
             if (conf.outputTypes == OutputTypes::BINARY
                 || conf.outputTypes == OutputTypes::ALL) {

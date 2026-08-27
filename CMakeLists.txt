@@ -49,6 +49,12 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 # Add the executable, and link it to the Geant4 libraries
 #
 add_executable(groundCarbon groundCarbon.cc ${sources} ${headers})
+# CRY's runtime data directory, resolved from the same CRYHOME env var used
+# above to find the library/headers, so ActionInitialization.cc never needs
+# a developer-specific hardcoded path.
+target_compile_definitions(groundCarbon PRIVATE
+  GC_CRY_DATA_PATH="$ENV{CRYHOME}/data"
+)
 if(useROOT)
   EXECUTE_PROCESS(COMMAND root-config --libs OUTPUT_VARIABLE ROOT_LD_FLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
   set(CMAKE_EXE_LINKER_FLAGS ${ROOT_LD_FLAGS})

@@ -7,6 +7,7 @@
 #include "Configs.hh"
 #include "DetectionPrimaryGeneratorAction.hh"
 #include "EventAction.hh"
+#include "NORMPrimaryGeneratorAction.hh"
 #include "RunAction.hh"
 #include "SteppingAction.hh"
 #include "TrackingAction.hh"
@@ -15,9 +16,14 @@
 
 namespace
 {
-constexpr std::string_view CRY_DATA_PATH {
-    "/Users/justjayiguess/Documents/Geant4/libs/cry_v1.7/data"
-};
+#ifndef GC_CRY_DATA_PATH
+#error \
+    "GC_CRY_DATA_PATH is not defined -- CRYHOME must be set in the environment when running CMake (see env.sh)"
+#endif
+// Baked in at configure time from $CRYHOME, the same env var CMakeLists.txt
+// already uses to locate the CRY library/headers -- see env.sh. Do not
+// hardcode a developer-specific path here; it won't exist on other machines.
+constexpr std::string_view CRY_DATA_PATH {GC_CRY_DATA_PATH};
 constexpr std::string_view CRY_SETUP_PATH {"setupCry.file"};
 } // namespace
 
@@ -47,9 +53,15 @@ void ActionInitialization::Build() const
 
     auto visitor = overloaded {
         [&, this](const CharacteriseSoilGammas& conf) {
-            SetUserAction(
-                new CRYPrimaryGeneratorAction(CRY_SETUP_PATH, CRY_DATA_PATH)
-            );
+            if (conf.source == PrimarySource::Cosmogenic) {
+                SetUserAction(new CRYPrimaryGeneratorAction(
+                    CRY_SETUP_PATH,
+                    CRY_DATA_PATH
+                ));
+            }
+            else {
+                SetUserAction(new NORMPrimaryGeneratorAction(soil));
+            }
             SetUserAction(new TrackingAction(eventAction));
         },
         [&, this](const TransportGammas& conf) {

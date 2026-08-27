@@ -79,11 +79,30 @@ int main(int argc, char* argv[])
 
     GCConfig gcConfig;
     if (args[1] == "soil-character") {
-        gcConfig =
-            CharacteriseSoilGammas {"csv", "soil-character-15pc-all", outputTypes};
-        if (args.size() == 4) {
+        PrimarySource source = PrimarySource::Cosmogenic;
+        if (args.size() == 4 || args.size() == 5) {
             num_runs = args[3];
         }
+        else if (args.size() > 5) {
+            return invalidArguments();
+        }
+        if (args.size() == 5) {
+            if (args[4] == "cosmogenic") {
+                source = PrimarySource::Cosmogenic;
+            }
+            else if (args[4] == "norm") {
+                source = PrimarySource::NORM;
+            }
+            else {
+                return invalidArguments();
+            }
+        }
+        gcConfig = CharacteriseSoilGammas {
+            "csv",
+            "soil-character-15pc-all",
+            outputTypes,
+            source
+        };
     }
     else if (args[1] == "transport") {
         updatePeriod = 50000;
@@ -140,6 +159,14 @@ int main(int argc, char* argv[])
     if (ui == nullptr) {
         // batch mode
         UImanager->ApplyCommand("/run/initialize ");
+        // G4RadioactiveDecay treats any nuclide with a mean life beyond this
+        // threshold as stable (default: 1 year), to avoid wasting time
+        // decaying practically-eternal isotopes. K-40/U-238/Th-232 all have
+        // billion-year half-lives, so this must be raised well above that or
+        // NORM primaries will never decay.
+        UImanager->ApplyCommand(
+            "/process/had/rdm/thresholdForVeryLongDecayTime 1.0e11 year"
+        );
         UImanager->ApplyCommand("/run/beamOn " + num_runs);
     }
     else {
@@ -207,13 +234,16 @@ void mergeBinaries(const std::vector<std::string>& args)
 int invalidArguments()
 {
     G4cerr
-        << "Usage: ./groundCarbon [soil-character|transport|detect] [info|binary|all] <path.bin (transport/detect only)> <run count (optional)>\n"
+        << "Usage: ./groundCarbon [soil-character|transport|detect] [info|binary|all] <path.bin (transport/detect only)> <run count (optional)> <source (soil-character only, optional)>\n"
         << "Or: ./groundCarbon merge <output_path.bin> output1.bin output2.bin ...\n\n"
         << "Note: if no run count is given, Geant4 will launch a GUI.\n"
         << "Note: choosing \'info\' will output a csv, \'binary\' will output a binary file.\n"
         << "      \'all\' will do both. These options have no effect when doing a \'detect\' run.\n\n"
+        << "Note: for soil-character, <source> selects the primary generator: "
+        << "\'cosmogenic\' (CRY cosmic-ray showers, default) or \'norm\' "
+        << "(in-situ K-40/U-238/Th-232 decay).\n\n"
         << "An example of how to use this:\n"
-        << "  $ mpirun -n 5 ./groundCarbon soil-character binary 1000000\n"
+        << "  $ mpirun -n 5 ./groundCarbon soil-character binary 1000000 cosmogenic\n"
         << "  $ ./groundCarbon merge soil-character/soil.bin soil-character/*.bin\n"
         << "  $ mpirun -n 5 ./groundCarbon transport all soil-character/soil.bin 10000000\n"
         << "  $ ./groundCarbon merge transport/predetection.bin transport/*.bin\n"

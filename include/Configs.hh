@@ -28,9 +28,20 @@ enum class OutputTypes : std::uint8_t
 };
 
 /**
- * @brief A run where cosmic rays are simulated, and gamma ray production is
- * captured in the soil.
- * 
+ * @brief Which primary generator supplies the soil-character stage: cosmic
+ * rays via CRY, or in-situ NORM (K-40/U-238/Th-232) decay.
+ *
+ */
+enum class PrimarySource : std::uint8_t
+{
+    Cosmogenic,
+    NORM
+};
+
+/**
+ * @brief A run where cosmic rays or NORM decays are simulated, and gamma ray
+ * production is captured in the soil.
+ *
  */
 struct CharacteriseSoilGammas
 {
@@ -40,6 +51,10 @@ struct CharacteriseSoilGammas
     std::string outputDirectoryName;
     /// @brief Types of outputs to save.
     OutputTypes outputTypes;
+    /// @brief Which primary generator to use. Defaults to Cosmogenic (CRY),
+    /// the only source this project supported before NORM was added; pass
+    /// PrimarySource::NORM explicitly for in-situ K-40/U-238/Th-232 decay.
+    PrimarySource source = PrimarySource::Cosmogenic;
 };
 
 /**

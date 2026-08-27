@@ -182,10 +182,13 @@ void SteppingAction::updateSoilCSV(
     analysisManager->FillNtupleDColumn(col++, momentumDir.getY());
     analysisManager->FillNtupleDColumn(col++, momentumDir.getZ());
 
-    // Position
-    analysisManager->FillNtupleDColumn(col++, pos.getX());
-    analysisManager->FillNtupleDColumn(col++, pos.getY());
-    analysisManager->FillNtupleDColumn(col++, pos.getZ());
+    // Position. G4ThreeVector components are in Geant4's internal length
+    // unit (millimetre-based, i.e. cm == 10); divide by `cm` so the CSV
+    // column actually holds centimetres, matching every consumer's
+    // assumption (column name, axis labels, report text).
+    analysisManager->FillNtupleDColumn(col++, pos.getX() / cm);
+    analysisManager->FillNtupleDColumn(col++, pos.getY() / cm);
+    analysisManager->FillNtupleDColumn(col++, pos.getZ() / cm);
 
     // Metadata
     analysisManager->FillNtupleSColumn(col++, creator.GetProcessName());
@@ -205,16 +208,26 @@ void SteppingAction::updateTransportCSV(
     G4int col = 0;
     auto* analysisManager = G4AnalysisManager::Instance();
 
+    // Position/depth fields are lengths in Geant4's internal (mm-based) unit
+    // system; divide by `cm` for CSV so they read as actual centimetres.
+    // momentum.* are direction-cosine components and pos/momentum .getPhi()
+    // are angles (radian == 1 internally) -- both already unitless/correct.
     analysisManager->FillNtupleDColumn(col++, energy);
     analysisManager->FillNtupleSColumn(col++, particleName);
-    analysisManager->FillNtupleDColumn(col++, pos.getZ());
-    analysisManager->FillNtupleDColumn(col++, pos.getRho());
+    analysisManager->FillNtupleDColumn(col++, pos.getZ() / cm);
+    analysisManager->FillNtupleDColumn(col++, pos.getRho() / cm);
     analysisManager->FillNtupleDColumn(col++, pos.getPhi());
     analysisManager->FillNtupleDColumn(col++, momentum.getZ());
     analysisManager->FillNtupleDColumn(col++, momentum.getRho());
     analysisManager->FillNtupleDColumn(col++, momentum.getPhi());
-    analysisManager->FillNtupleDColumn(col++, eventAction->GetSoilSourceZ());
-    analysisManager->FillNtupleDColumn(col++, eventAction->GetSoilSourceRho());
+    analysisManager->FillNtupleDColumn(
+        col++,
+        eventAction->GetSoilSourceZ() / cm
+    );
+    analysisManager->FillNtupleDColumn(
+        col++,
+        eventAction->GetSoilSourceRho() / cm
+    );
     analysisManager->FillNtupleDColumn(
         col++,
         eventAction->GetSoilSourceEnergy()

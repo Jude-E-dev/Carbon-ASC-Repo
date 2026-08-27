@@ -64,8 +64,14 @@ void EventAction::EndOfEventAction(const G4Event* event)
                 GetDetectionStartingEnergyInSoil()
             );
             analysisManager->FillNtupleIColumn(col++, GetDetectionSourcePDG());
-            analysisManager->FillNtupleDColumn(col++, GetDetectionSoilZ());
-            analysisManager->FillNtupleDColumn(col++, GetDetectionSoilRho());
+            // zInSoil/rhoInSoil are lengths in Geant4's internal (mm-based)
+            // unit system; divide by `cm` so the CSV holds centimetres, as
+            // the column name and every report/plot assume.
+            analysisManager->FillNtupleDColumn(col++, GetDetectionSoilZ() / cm);
+            analysisManager->FillNtupleDColumn(
+                col++,
+                GetDetectionSoilRho() / cm
+            );
             analysisManager->AddNtupleRow();
         }
     }

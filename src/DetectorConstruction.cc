@@ -18,6 +18,7 @@
 
 #include "Configs.hh"
 #include "SensitiveDetector.hh"
+#include "SoilLayerGeometry.hh"
 
 namespace
 {
@@ -76,20 +77,21 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     soilOrganicCarbon->AddElement(elP, 0.01);
     soilOrganicCarbon->AddElement(elS, 0.01);
 
-    // From McTaggart
+    // North Canberra XRF/ICP-MS medians. Must match
+    // NORMPrimaryGeneratorAction.cc's POTASSIUM_MASS_FRACTION (elK, below).
     auto* mineralComponent =
         new G4Material("mineralComponent", 2.6 * g / cm3, 10);
-    mineralComponent->AddElement(elO, 0.440);
-    mineralComponent->AddElement(elSi, 0.280);
-    mineralComponent->AddElement(elAl, 0.080);
-    mineralComponent->AddElement(elFe, 0.050);
-    mineralComponent->AddElement(elCa, 0.035);
-    mineralComponent->AddElement(elNa, 0.030);
-    mineralComponent->AddElement(elK, 0.025);
-    mineralComponent->AddElement(elMg, 0.020);
-    mineralComponent->AddElement(elTi, 0.005);
-    mineralComponent->AddElement(elMn, 0.001);
-    // Remaining 3.4% is 'other'
+    mineralComponent->AddElement(elO, 0.4624);
+    mineralComponent->AddElement(elSi, 0.3515);
+    mineralComponent->AddElement(elAl, 0.0480);
+    mineralComponent->AddElement(elFe, 0.0184);
+    mineralComponent->AddElement(elCa, 0.0022);
+    mineralComponent->AddElement(elNa, 0.0054);
+    mineralComponent->AddElement(elMg, 0.0028);
+    mineralComponent->AddElement(elTi, 0.0055);
+    mineralComponent->AddElement(elMn, 0.0005);
+    mineralComponent->AddElement(elK, 0.01403);
+    // Remaining 8.927% is 'other'
 
     /* ---------------------------------- World --------------------------------- */
 
@@ -124,7 +126,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
             "SolidDetector",
             0.0,
             DETECTOR_RADIUS,
-            DETECTOR_HEIGHT,
+            DETECTOR_HEIGHT / 2, // G4Tubs takes the HALF-length in z
             0.0,
             CLHEP::twopi
         );
@@ -134,7 +136,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
         new G4PVPlacement(
             nullptr,
-            G4ThreeVector(0.0, 0.0, DETECTOR_ELEVATION + DETECTOR_RADIUS / 2),
+            G4ThreeVector(0.0, 0.0, DETECTOR_ELEVATION),
             "PhysicalDetector",
             logicalDetector,
             physWorld,
@@ -157,30 +159,23 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     const G4double mineralDensity = mineralComponent->GetDensity() / (g / cm3);
 
     // Soil parameters, from McTaggart
-    const G4double airVolumeFraction = 0.25;
-    const G4double waterVolumeFraction = 0.25;
-    const G4double carbonDecayRate = 0.02349 / cm;
+    const G4double airVolumeFraction = SoilComposition::AIR_VOLUME_FRACTION;
+    const G4double waterVolumeFraction = SoilComposition::WATER_VOLUME_FRACTION;
 
     // Construct layers
-    G4double zTop = 0.0;
-    G4bool reachedBottom = false;
-    for (size_t i = 0; i < soilCarbonSubdivisions; i++) {
-        G4double zBottom =
-            std::log(1.0 - (G4double)(i + 1) / soilCarbonSubdivisions)
-            / carbonDecayRate;
+    const SoilConfig soilCfg {
+        soilCarbonPercentage,
+        soilCarbonSubdivisions,
+        soilDepth,
+        soilWidth
+    };
+    const auto layers = ComputeSoilLayers(soilCfg);
 
-        if (zBottom < -soilDepth) {
-            zBottom = -soilDepth;
-            reachedBottom = true;
-        }
-        if (i == soilCarbonSubdivisions - 1) {
-            zBottom = -soilDepth;
-        }
-
-        const G4double carbonVolumeFraction =
-            soilCarbonPercentage * std::exp(carbonDecayRate * zBottom);
-        const G4double mineralVolumeFraction = 1.0 - airVolumeFraction
-            - waterVolumeFraction - carbonVolumeFraction;
+    for (size_t i = 0; i < layers.size(); i++) {
+        const G4double zTop = layers[i].zTop;
+        const G4double zBottom = layers[i].zBottom;
+        const G4double carbonVolumeFraction = layers[i].carbonVolumeFraction;
+        const G4double mineralVolumeFraction = layers[i].mineralVolumeFraction;
 
         const G4double totalMass = airVolumeFraction * airDensity
             + waterVolumeFraction * waterDensity
@@ -259,11 +254,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
             i,
             true
         );
-
-        zTop = zBottom;
-        if (reachedBottom) {
-            break;
-        }
     }
 
     return physWorld;

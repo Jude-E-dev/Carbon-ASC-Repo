@@ -3,5 +3,6 @@
 
 /run/verbose 1
 /run/initialize
+/process/had/rdm/thresholdForVeryLongDecayTime 1.0e11 year
 
 /control/execute vis.mac
