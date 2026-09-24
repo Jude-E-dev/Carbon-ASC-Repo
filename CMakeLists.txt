@@ -43,6 +43,7 @@ endif(useROOT)
 # NB: headers are included so they will show up in IDEs
 #
 file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
+file(GLOB v4sources ${PROJECT_SOURCE_DIR}/src/v4/*.cc)
 file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 
 #----------------------------------------------------------------------------
@@ -61,6 +62,13 @@ if(useROOT)
   set(ROOT_LIBRARIES ${ROOT_LIBRARIES})
 endif(useROOT)
 target_link_libraries(groundCarbon ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ${CRY_LIBRARIES})
+
+# v4 driver (runtime soil files, production/transport/analog modes). Shares
+# the CRY RNG wrapper with the legacy binary; everything else lives in src/v4.
+add_executable(gc4 gc4.cc ${v4sources} ${PROJECT_SOURCE_DIR}/src/RNGWrapper.cc)
+target_compile_features(gc4 PRIVATE cxx_std_17)
+target_compile_definitions(gc4 PRIVATE GC_CRY_DATA_PATH="$ENV{CRYHOME}/data")
+target_link_libraries(gc4 ${Geant4_LIBRARIES} ${CRY_LIBRARIES})
 
 #----------------------------------------------------------------------------
 # Include root
