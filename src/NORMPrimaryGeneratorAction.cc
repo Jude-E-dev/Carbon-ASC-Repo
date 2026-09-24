@@ -17,7 +17,10 @@ namespace
 // DetectorConstruction.cc's elK mass fraction (North Canberra XRF/ICP-MS
 // median, 1.403%) -- these are the same atoms, just viewed from the
 // source-term side instead of the material side.
-constexpr G4double POTASSIUM_MASS_FRACTION = 0.01403;
+// The AGENT:* tags below are machine-readable anchors used by
+// Agents/agent/sim_control.py to patch composition without a runtime
+// config -- keep each tagged statement on its own line if you edit by hand.
+constexpr G4double POTASSIUM_MASS_FRACTION = 0.018260; // AGENT:K_FRACTION
 // Bq per gram of natural potassium (UNSCEAR / IAEA reference value).
 constexpr G4double K40_SPECIFIC_ACTIVITY_BQ_PER_G_K = 30.4;
 
@@ -25,8 +28,8 @@ constexpr G4double K40_SPECIFIC_ACTIVITY_BQ_PER_G_K = 30.4;
 // by mass. These are NOT in the bulk material definition (too dilute to
 // affect density), so they're independent, directly-editable knobs here.
 //   EDIT THESE to change the simulated NORM background level.
-constexpr G4double URANIUM_CONCENTRATION_PPM = 2.0; // typical soil: 1-3 ppm U
-constexpr G4double THORIUM_CONCENTRATION_PPM = 10.0; // typical soil: 2-12 ppm Th
+constexpr G4double URANIUM_CONCENTRATION_PPM = 4.300000; // AGENT:U_PPM
+constexpr G4double THORIUM_CONCENTRATION_PPM = 15.400000; // AGENT:TH_PPM
 
 // Specific activity of the pure parent nuclide (Bq/g), from T_1/2 via
 // A = ln(2) * N_A / (T_1/2 * atomic_mass).
@@ -37,7 +40,7 @@ constexpr G4double PPM_TO_MASS_FRACTION = 1.0e-6;
 constexpr G4double G_TO_KG = 1.0e-3; // g -> kg divisor helper (multiply by this)
 
 // Must match DetectorConstruction.cc's mineralComponent density.
-constexpr G4double MINERAL_DENSITY = 2.6 * g / cm3;
+constexpr G4double MINERAL_DENSITY = 2.600000 * g / cm3; // AGENT:MINERAL_DENSITY
 } // namespace
 
 NORMPrimaryGeneratorAction::NORMPrimaryGeneratorAction(const SoilConfig& soil)

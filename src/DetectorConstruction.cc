@@ -79,18 +79,21 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
     // North Canberra XRF/ICP-MS medians. Must match
     // NORMPrimaryGeneratorAction.cc's POTASSIUM_MASS_FRACTION (elK, below).
-    auto* mineralComponent =
-        new G4Material("mineralComponent", 2.6 * g / cm3, 10);
-    mineralComponent->AddElement(elO, 0.4624);
-    mineralComponent->AddElement(elSi, 0.3515);
-    mineralComponent->AddElement(elAl, 0.0480);
-    mineralComponent->AddElement(elFe, 0.0184);
-    mineralComponent->AddElement(elCa, 0.0022);
-    mineralComponent->AddElement(elNa, 0.0054);
-    mineralComponent->AddElement(elMg, 0.0028);
-    mineralComponent->AddElement(elTi, 0.0055);
-    mineralComponent->AddElement(elMn, 0.0005);
-    mineralComponent->AddElement(elK, 0.01403);
+    // The AGENT:* tags below are machine-readable anchors used by
+    // Agents/agent/sim_control.py to patch composition without a runtime
+    // config -- keep each tagged statement on its own line if you edit by
+    // hand, so the tag stays adjacent to the value it marks.
+    auto* mineralComponent = new G4Material("mineralComponent", 2.600000 * g / cm3, 10); // AGENT:MINERAL_DENSITY
+    mineralComponent->AddElement(elO, 0.462400); // AGENT:frac:O
+    mineralComponent->AddElement(elSi, 0.351500); // AGENT:frac:Si
+    mineralComponent->AddElement(elAl, 0.048000); // AGENT:frac:Al
+    mineralComponent->AddElement(elFe, 0.018400); // AGENT:frac:Fe
+    mineralComponent->AddElement(elCa, 0.002200); // AGENT:frac:Ca
+    mineralComponent->AddElement(elNa, 0.005400); // AGENT:frac:Na
+    mineralComponent->AddElement(elMg, 0.002800); // AGENT:frac:Mg
+    mineralComponent->AddElement(elTi, 0.005500); // AGENT:frac:Ti
+    mineralComponent->AddElement(elMn, 0.000500); // AGENT:frac:Mn
+    mineralComponent->AddElement(elK, 0.018260); // AGENT:frac:K
     // Remaining 8.927% is 'other'
 
     /* ---------------------------------- World --------------------------------- */
