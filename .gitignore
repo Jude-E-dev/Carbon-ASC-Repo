@@ -6,4 +6,6 @@ analysis/.venv/
 .cache/
 finals/
 ai-transcript/
-reports/build-v4/
+reports/
+build-v4/
+__pycache__/
