@@ -1,0 +1,19 @@
+# Environment for building and running the v4 campaign on nuccomp1.
+#
+# Copy to ground-carbon/env_nuccomp1.sh, set G4_INSTALL, and source it (from
+# bash) before build_v4.sh and run_v4.py:
+#
+#   . ground-carbon/env_nuccomp1.sh
+#
+# Geant4 >= 11.2 exports GEANT4_DATA_DIR rather than the individual G4*DATA
+# variables; that is expected. The v3 campaign used Geant4 11.3.0 here.
+
+G4_INSTALL=/path/to/geant4-11.3.0-install   # directory containing bin/geant4.sh
+
+# shellcheck disable=SC1091
+. "$G4_INSTALL/bin/geant4.sh"
+
+_gc_env_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
+# Absolute, no trailing slash: CMake bakes $CRYHOME/data into the binary.
+export CRYHOME="$(cd "$_gc_env_dir/../cry_v1.7" > /dev/null 2>&1 && pwd)"
+unset _gc_env_dir G4_INSTALL
