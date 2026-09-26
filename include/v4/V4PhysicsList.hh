@@ -15,8 +15,9 @@
  * dominant Si-28(n,g) lines at 3.539 and 4.934 MeV. Geant4 11.3 and earlier
  * (Jay's runs, v1-v3) use G4NeutronHPCapture, which samples the evaluated
  * (G4NDL) capture photons where they exist. captureModel "hp" (default)
- * forces G4NeutronHPCapture below 20 MeV on every version, so results do
- * not depend on the installed release; "default" keeps the list's own.
+ * installs V4CaptureModel below 20 MeV on every version (G4NeutronHPCapture,
+ * with exact kinematics for H-1, which has no G4NDL photon data), so results
+ * do not depend on the installed release; "default" keeps the list's own.
  */
 class V4PhysicsList: public G4VModularPhysicsList
 {

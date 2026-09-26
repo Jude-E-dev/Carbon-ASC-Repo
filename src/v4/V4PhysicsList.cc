@@ -14,7 +14,7 @@
 #include <G4HadronicInteraction.hh>
 #include <G4HadronicProcess.hh>
 #include <G4Neutron.hh>
-#include <G4NeutronHPCapture.hh>
+#include "v4/V4CaptureModel.hh"
 #include <G4ProcessManager.hh>
 #include <G4ThermalNeutrons.hh>
 #include <G4ios.hh>
@@ -91,9 +91,7 @@ void V4PhysicsList::ConstructProcess()
             G4cout << " -> retired" << G4endl;
         }
     }
-    auto* hpCapture = new G4NeutronHPCapture();
-    hpCapture->SetMinEnergy(0.0);
-    hpCapture->SetMaxEnergy(HP_MAX);
-    capture->RegisterMe(hpCapture);
-    G4cout << "V4PhysicsList: neutron capture below 20 MeV uses G4NeutronHPCapture" << G4endl;
+    capture->RegisterMe(new V4CaptureModel());
+    G4cout << "V4PhysicsList: neutron capture below 20 MeV uses V4CaptureModel "
+              "(G4NeutronHPCapture; exact n+p->d+gamma for H-1)" << G4endl;
 }
