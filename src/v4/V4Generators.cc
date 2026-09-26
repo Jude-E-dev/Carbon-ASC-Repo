@@ -275,14 +275,14 @@ double V4TransportGenerator::BroadDensity(double x, double y) const
 }
 
 double V4TransportGenerator::ShadowDensity(double x, double y, const G4ThreeVector& d,
-                                           double z) const
+                                           double z, double margin_cm) const
 {
     // Points from which an unscattered ray along d can cross the detector:
     // the segment S(h) = -(h - z) tan(theta) u, h in [bottom, top], widened by
     // a disk of radius Rs. Sampling = uniform point on the segment + uniform
     // point in the disk, so q(x) = (length of segment within Rs of x) /
     // (L * pi * Rs^2).
-    const double r = V4DetectorConstruction::DETECTOR_RADIUS_CM + SHADOW_MARGIN_CM;
+    const double r = V4DetectorConstruction::DETECTOR_RADIUS_CM + margin_cm;
     const double hb = V4DetectorConstruction::DETECTOR_ELEVATION_CM
         - V4DetectorConstruction::DETECTOR_HEIGHT_CM / 2;
     const double ht = hb + V4DetectorConstruction::DETECTOR_HEIGHT_CM;
@@ -328,22 +328,43 @@ V4TransportGenerator::SamplePosition(const std::vector<G4ThreeVector>& direction
         return p;
     }
 
-    // Mixture: with probability ps, the shadow of one upward gamma of the
-    // event chosen uniformly (so every gamma of a NORM coincidence group gets
-    // its share); otherwise the broad density. q(x) is the full mixture.
+    // Mixture over three components, for events with at least one upward
+    // gamma: the tight shadow (margin SHADOW_MARGIN_CM: unscattered rays), a
+    // wide shadow (margin wideMargin: rays that reach the detector after a
+    // small-angle scatter, which otherwise land in the thin tail of the broad
+    // density and carry huge weights), and the broad density. Each shadow
+    // draw picks one upward gamma of the event uniformly, so every gamma of a
+    // NORM coincidence group gets its share. q(x) is the full mixture.
     std::vector<const G4ThreeVector*> upward;
     for (const auto& d : directions) {
         if (d.z() > UPWARD_MU_MIN) {
             upward.push_back(&d);
         }
     }
-    const double ps = upward.empty() ? 0.0 : options.shadowFraction;
-    if (G4UniformRand() < ps) {
+    // A defensive uniform component over the whole disk (probability pu)
+    // bounds every weight by pi R^2 / pu, so rare far-away scattered photons
+    // cannot dominate a finite run (Hesterberg's defensive mixture).
+    const double pu = options.uniformFraction;
+    const double ps = upward.empty() ? 0.0 : options.shadowFraction * (1.0 - pu);
+    const double pWide = ps * options.wideFraction;
+    const double pTight = ps - pWide;
+    const double pb = 1.0 - pu - ps;
+    const double wide = options.wideMargin_cm;
+    const double R = options.rMax_m * 100.0;
+    const double u = G4UniformRand();
+    if (u >= ps && u < ps + pu) {
+        const double rho = R * std::sqrt(G4UniformRand());
+        const double phi = CLHEP::twopi * G4UniformRand();
+        p.x_cm = rho * std::cos(phi);
+        p.y_cm = rho * std::sin(phi);
+    }
+    else if (u < ps) {
         shadowDraws++;
+        const double margin = u < pTight ? SHADOW_MARGIN_CM : wide;
         const auto k = std::min(upward.size() - 1,
                                 static_cast<std::size_t>(G4UniformRand() * upward.size()));
         const G4ThreeVector& d = *upward[k];
-        const double r = V4DetectorConstruction::DETECTOR_RADIUS_CM + SHADOW_MARGIN_CM;
+        const double r = V4DetectorConstruction::DETECTOR_RADIUS_CM + margin;
         const double hb = V4DetectorConstruction::DETECTOR_ELEVATION_CM
             - V4DetectorConstruction::DETECTOR_HEIGHT_CM / 2;
         const double ht = hb + V4DetectorConstruction::DETECTOR_HEIGHT_CM;
@@ -361,21 +382,28 @@ V4TransportGenerator::SamplePosition(const std::vector<G4ThreeVector>& direction
         p.y_cm = cy + rr * std::sin(phi);
     }
     else {
-        const double R = options.rMax_m * 100.0;
         const double a = options.broadScale_cm;
-        const double u = G4UniformRand();
-        const double rho = a * std::sqrt(std::pow(1.0 + R * R / (a * a), u) - 1.0);
+        const double v = G4UniformRand();
+        const double rho = a * std::sqrt(std::pow(1.0 + R * R / (a * a), v) - 1.0);
         const double phi = CLHEP::twopi * G4UniformRand();
         p.x_cm = rho * std::cos(phi);
         p.y_cm = rho * std::sin(phi);
     }
-    double q = (1.0 - ps) * BroadDensity(p.x_cm, p.y_cm);
+    double q = pb * BroadDensity(p.x_cm, p.y_cm);
+    if (pu > 0.0 && p.x_cm * p.x_cm + p.y_cm * p.y_cm <= R * R) {
+        q += pu / (CLHEP::pi * R * R);
+    }
     if (ps > 0.0) {
-        double shadow = 0.0;
+        double tight = 0.0;
+        double wideSum = 0.0;
         for (const auto* d : upward) {
-            shadow += ShadowDensity(p.x_cm, p.y_cm, *d, z_cm);
+            tight += ShadowDensity(p.x_cm, p.y_cm, *d, z_cm, SHADOW_MARGIN_CM);
+            if (pWide > 0.0) {
+                wideSum += ShadowDensity(p.x_cm, p.y_cm, *d, z_cm, wide);
+            }
         }
-        q += ps * shadow / static_cast<double>(upward.size());
+        const double n = static_cast<double>(upward.size());
+        q += pTight * tight / n + pWide * wideSum / n;
     }
     p.invQ_cm2 = q > 0.0 ? 1.0 / q : 0.0;
     return p;
@@ -475,6 +503,11 @@ void V4TransportGenerator::GeneratePrimaries(G4Event* event)
     state->weight = baseWeight * roulette * where.invQ_cm2;
     state->originClass = v4::OriginClass(leading->proc, leading->targetZ);
     state->zSource_cm = z_cm;
+    state->eLeading_MeV = maxE;
+    state->muFirst = directions.front().z();
+    state->x_cm = where.x_cm;
+    state->y_cm = where.y_cm;
+    state->nGammas = static_cast<int>(emit.size());
 
     const G4ThreeVector position(where.x_cm * cm, where.y_cm * cm, z_cm * cm);
     if (state->weight <= 0.0) {
@@ -506,6 +539,9 @@ std::string V4TransportGenerator::ExtraJson() const
       << options.sampler << "\", \"replays\": " << options.replays
       << ", \"r_max_m\": " << options.rMax_m
       << ", \"shadow_fraction\": " << options.shadowFraction
+      << ", \"wide_fraction\": " << options.wideFraction
+      << ", \"wide_margin_cm\": " << options.wideMargin_cm
+      << ", \"uniform_fraction\": " << options.uniformFraction
       << ", \"broad_scale_cm\": " << options.broadScale_cm
       << ", \"roulette_tau\": " << options.rouletteTau
       << ", \"roulette_killed\": " << rouletteKilled

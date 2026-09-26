@@ -62,13 +62,17 @@ struct V4Options
     std::string input;            // production .bin or NORM library .bin
     G4int replays = 1;            // per production record / library group
     G4double rMax_m = 5.0;        // lateral extent of position sampling
-    G4double shadowFraction = 0.5;
+    G4double shadowFraction = 0.6; // tight + wide shadow share (upward gammas)
+    G4double wideFraction = 0.5;   // share of the shadow draws that use the wide margin
+    G4double wideMargin_cm = 40.0;
+    G4double uniformFraction = 0.2; // defensive uniform share over the R_max disk
     G4double broadScale_cm = 30.0;
     std::string sampler = "is";   // is | uniform
     G4int batches = 32;
     G4double normDepth_cm = 100.0;
     G4double rouletteTau = 5.0;   // optical depth where roulette starts (<=0 off)
     std::uint64_t normSamples = 0; // NORM: groups to transport (events)
+    G4double debugWeight = 0.0;    // log hits with weight above this (0 = off)
 
     // analog
     G4double sourceHeight_m = 1.0;

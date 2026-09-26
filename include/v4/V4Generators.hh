@@ -29,6 +29,12 @@ struct V4EventState
     int originClass = 0;
     int batch = 0;
     double zSource_cm = 0.0;
+    // for --debug-weight diagnostics
+    double eLeading_MeV = 0.0;
+    double muFirst = 0.0;
+    double x_cm = 0.0;
+    double y_cm = 0.0;
+    int nGammas = 0;
 };
 
 /** @brief Base with an exposure/area report used by the run action. */
@@ -126,7 +132,8 @@ class V4TransportGenerator: public V4Generator
         double invQ_cm2; // 1/q(x)
     };
     Placement SamplePosition(const std::vector<G4ThreeVector>& directions, double z_cm);
-    double ShadowDensity(double x, double y, const G4ThreeVector& d, double z) const;
+    double ShadowDensity(double x, double y, const G4ThreeVector& d, double z,
+                         double margin_cm) const;
     double BroadDensity(double x, double y) const;
     double RouletteWeight(double E_MeV, double z_cm);
     bool NextProductionRecord(v4::ProductionRecord& out);

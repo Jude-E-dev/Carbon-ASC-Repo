@@ -76,12 +76,16 @@ V4Options V4Options::Parse(const std::vector<std::string>& args)
         else if (key == "--replays") o.replays = std::stoi(v);
         else if (key == "--r-max-m") o.rMax_m = std::stod(v);
         else if (key == "--shadow-fraction") o.shadowFraction = std::stod(v);
+        else if (key == "--wide-fraction") o.wideFraction = std::stod(v);
+        else if (key == "--wide-margin-cm") o.wideMargin_cm = std::stod(v);
+        else if (key == "--uniform-fraction") o.uniformFraction = std::stod(v);
         else if (key == "--broad-scale-cm") o.broadScale_cm = std::stod(v);
         else if (key == "--sampler") o.sampler = v;
         else if (key == "--batches") o.batches = std::stoi(v);
         else if (key == "--norm-depth-cm") o.normDepth_cm = std::stod(v);
         else if (key == "--roulette-tau") o.rouletteTau = std::stod(v);
         else if (key == "--norm-samples") o.normSamples = std::stoull(v);
+        else if (key == "--debug-weight") o.debugWeight = std::stod(v);
         else if (key == "--source-height-m") o.sourceHeight_m = std::stod(v);
         else {
             throw std::runtime_error("unknown option '" + key + "'\n" + Usage());
@@ -148,9 +152,10 @@ Produce: --source cry|gun  --cry-setup FILE  --gun-particle P --gun-energy-mev E
          --gun-box-m L  --min-gamma-mev E (0.3)  --write-records 0|1  --flux-tally 0|1
 Library: --isotope K40|U238|Th232  --min-gamma-mev E (0.03)
 Transport: --input FILE (GC4PROD or GC4NLIB)  --replays R (1)  --norm-samples N
-         --sampler is|uniform  --r-max-m R (5)  --shadow-fraction P (0.5)
+         --sampler is|uniform  --r-max-m R (5)  --shadow-fraction P (0.6)
+         --wide-fraction F (0.5)  --wide-margin-cm M (40)  --uniform-fraction U (0.2)
          --broad-scale-cm A (30)  --batches B (32)  --norm-depth-cm D (100)
-         --roulette-tau T (5; <=0 disables)
+         --roulette-tau T (5; <=0 disables)  --debug-weight W (log hits with w > W)
 Analog:  --cry-setup FILE  --source-height-m H (1.0)
 )";
 }
