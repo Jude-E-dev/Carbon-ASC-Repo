@@ -27,7 +27,7 @@ and site-to-site variation in the rest of the soil.
 | mode | primaries | geometry | writes |
 |---|---|---|---|
 | `produce` | CRY showers on a 5 x 5 m box at z = 0 | soil 40 x 40 m, 1.5 m deep (6 SLGA layers) under 20 m of air; vacuum below | every gamma >= 0.3 MeV born in the soil: E, depth, direction, time, **creator process, target nucleus**, parent, cosmic primary; then killed. Neutron track-length tallies vs depth and energy |
-| `transport` | the production records, 2 replays each (or NORM library groups) | same soil + the Ge detector | Edep histograms (1 keV, 0-12 MeV) by 12 origin classes x 32 batches, with weights |
+| `transport` | the production records, 4 replays each (or NORM library groups) | same soil + the Ge detector | Edep histograms (1 keV, 0-12 MeV) by 12 origin classes x 32 batches, with weights |
 | `norm-library` | K-40 / U-238 / Th-232 at rest; full chain in secular equilibrium | soil | the gammas of each decay, grouped so prompt coincidences (e.g. 2614 + 583 keV) are kept |
 | `analog` | CRY showers 1 m above the ground | soil, detector, a virtual tag plane at 45 cm | every detector pulse (100 ns buckets) with time and origin (direct shower / soil gamma / other soil particle) and every particle crossing the tag plane |
 
@@ -38,8 +38,10 @@ Key differences from v3 (see PREP_NOTES_V4.md for the evidence):
   under a 25 m2 source over a 19.6 m2 disk with the same exposure (rates 4/pi high) and
   lost every neutron at its 5 x 5 x 0.5 m boundaries.
 - **Importance-sampled transport.** Each production gamma is placed laterally by a
-  mixture of (a) the detector's "shadow" for its direction and (b) a heavy-tailed
-  density around the detector, with weight 1/q. Unbiased (validated against uniform
+  mixture of (a) the detector's "shadow" for its direction (tight, for unscattered rays,
+  and 40 cm wider, for small-angle scatters), (b) a heavy-tailed density around the
+  detector and (c) a defensive uniform share over the 5 m disk that bounds every
+  weight, with weight 1/q. Unbiased (validated against uniform
   sampling) and ~10^3 times more efficient for full-energy peaks than v3's uniform disk.
   The detect stage is merged into it: no second replay stage.
 - **Neutron capture photons from evaluated data** (`V4CaptureModel`: `G4NeutronHPCapture`,
@@ -65,7 +67,7 @@ Key differences from v3 (see PREP_NOTES_V4.md for the evidence):
 | analog | 2 | chromosol central: CRY box 5 m for 12 h of sky; CRY box 10 m for 3 h | analog | no |
 
 Per CRY run: **1800 s of simulated sky** in 20 production chunks of 90 s, each
-followed by its transport (2 replays). Per NORM template: 32 M library groups in 4
+followed by its transport (4 replays). Per NORM template: 32 M library groups in 4
 chunks. NORM libraries: 2 M chains per isotope, shared by every soil.
 
 Production records are deleted once transported, except chunks 0-3 of the five

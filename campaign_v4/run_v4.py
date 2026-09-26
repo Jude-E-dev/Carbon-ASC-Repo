@@ -46,7 +46,7 @@ PROFILES = {
     "full": {
         "cry_exposure_s": 1800.0,     # simulated sky time per composition
         "cry_chunk_s": 90.0,          # per production job
-        "replays": 2,
+        "replays": 4,                 # continuum noise is replay-dominated (PREP_NOTES 5)
         "keep_chunks_central": 4,     # production records kept for re-analysis
         "norm_samples": 32_000_000,   # per isotope per composition
         "norm_chunk_samples": 8_000_000,

@@ -82,9 +82,29 @@ stored gamma was aimed at, so e.g. Tl-208's 2.614 MeV gamma was often placed as 
 and carried heavy weights. The NORM continuum near 2.2 MeV improved from ~46% to ~23% relative
 error per 10 keV bin for 2 M samples (~6% at the campaign's 32 M).
 
-Rare, very heavy weights remain (a single event can dominate one 1 keV bin in a short run);
-they are almost all below 0.3 MeV, outside the analysis range, and the 32-batch errors
-include them.
+**Heavy tails, and the final sampler (2026-09-26).** Logging every hit with weight > 2e4
+(`--debug-weight`) showed the heaviest hits are scattered photons that start just outside
+the tight shadow or 1-2 m from the detector, where only the thin broad density samples
+them. With 2 replays one such hit put 2196 +- 92% counts/day into a 50 keV continuum
+window that reads 164 +- 9% with 8 replays; and on the synthetic source the IS *total*
+rate came out 1375 +- 46 against uniform 1588 +- 44 (3.4 sigma): a finite run usually
+misses the rare large weights, so both the value and its batch error come out low. Peaks
+were never affected. Two changes fix it:
+- a **wide shadow** (margin 40 cm) takes half of the shadow draws, covering small-angle
+  scatters next to the unscattered region;
+- a **defensive uniform component** (20% of draws, uniform on the 5 m disk) bounds every
+  weight by pi R^2 / (0.2 x replays).
+
+Synthetic check with the final mixture (tight 0.3 / wide 0.3 / broad 0.2 / uniform 0.2
+for upward gammas): total 1533 +- 82 (uniform 1588 +- 44), 2.223 peak 107 +- 3, 4.439 peak
+111 +- 3, continuum 1-2 MeV 257 +- 51 (uniform 244 +- 16), at ~12x less CPU than uniform.
+The continuum noise is replay-dominated (8 replays roughly halved it relative to 2), so the
+campaign uses **4 replays**. Projected MC error per run at 1800 s of sky: peaks 2-5%,
+continuum per 50 keV ~4-8%. The `val_uniform` and `val_k8` runs repeat these checks at
+scale on real production records.
+
+Timing note: runs on a memory-starved Mac showed wall rates of ~550-3000 events/s; the
+CPU rate is ~10,000 events/s (checked with `time`: 72 s user for 600 k events).
 The `val_uniform` run repeats this test at scale on real production records.
 
 ## 6. Other checks
