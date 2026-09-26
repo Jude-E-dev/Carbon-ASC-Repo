@@ -125,7 +125,7 @@ class V4TransportGenerator: public V4Generator
         double y_cm;
         double invQ_cm2; // 1/q(x)
     };
-    Placement SamplePosition(const G4ThreeVector& direction, double z_cm);
+    Placement SamplePosition(const std::vector<G4ThreeVector>& directions, double z_cm);
     double ShadowDensity(double x, double y, const G4ThreeVector& d, double z) const;
     double BroadDensity(double x, double y) const;
     double RouletteWeight(double E_MeV, double z_cm);

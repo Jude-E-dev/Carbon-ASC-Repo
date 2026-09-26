@@ -315,7 +315,7 @@ double V4TransportGenerator::ShadowDensity(double x, double y, const G4ThreeVect
 }
 
 V4TransportGenerator::Placement
-V4TransportGenerator::SamplePosition(const G4ThreeVector& d, double z_cm)
+V4TransportGenerator::SamplePosition(const std::vector<G4ThreeVector>& directions, double z_cm)
 {
     Placement p {};
     if (options.sampler == "uniform") {
@@ -328,10 +328,21 @@ V4TransportGenerator::SamplePosition(const G4ThreeVector& d, double z_cm)
         return p;
     }
 
-    const bool upward = d.z() > UPWARD_MU_MIN;
-    const double ps = upward ? options.shadowFraction : 0.0;
+    // Mixture: with probability ps, the shadow of one upward gamma of the
+    // event chosen uniformly (so every gamma of a NORM coincidence group gets
+    // its share); otherwise the broad density. q(x) is the full mixture.
+    std::vector<const G4ThreeVector*> upward;
+    for (const auto& d : directions) {
+        if (d.z() > UPWARD_MU_MIN) {
+            upward.push_back(&d);
+        }
+    }
+    const double ps = upward.empty() ? 0.0 : options.shadowFraction;
     if (G4UniformRand() < ps) {
         shadowDraws++;
+        const auto k = std::min(upward.size() - 1,
+                                static_cast<std::size_t>(G4UniformRand() * upward.size()));
+        const G4ThreeVector& d = *upward[k];
         const double r = V4DetectorConstruction::DETECTOR_RADIUS_CM + SHADOW_MARGIN_CM;
         const double hb = V4DetectorConstruction::DETECTOR_ELEVATION_CM
             - V4DetectorConstruction::DETECTOR_HEIGHT_CM / 2;
@@ -360,7 +371,11 @@ V4TransportGenerator::SamplePosition(const G4ThreeVector& d, double z_cm)
     }
     double q = (1.0 - ps) * BroadDensity(p.x_cm, p.y_cm);
     if (ps > 0.0) {
-        q += ps * ShadowDensity(p.x_cm, p.y_cm, d, z_cm);
+        double shadow = 0.0;
+        for (const auto* d : upward) {
+            shadow += ShadowDensity(p.x_cm, p.y_cm, *d, z_cm);
+        }
+        q += ps * shadow / static_cast<double>(upward.size());
     }
     p.invQ_cm2 = q > 0.0 ? 1.0 / q : 0.0;
     return p;
@@ -456,7 +471,7 @@ void V4TransportGenerator::GeneratePrimaries(G4Event* event)
     }
 
     const double roulette = RouletteWeight(maxE, z_cm);
-    const Placement where = SamplePosition(directions.front(), z_cm);
+    const Placement where = SamplePosition(directions, z_cm);
     state->weight = baseWeight * roulette * where.invQ_cm2;
     state->originClass = v4::OriginClass(leading->proc, leading->targetZ);
     state->zSource_cm = z_cm;
