@@ -1,9 +1,10 @@
 # v4 campaign: can passive cosmogenic gamma spectrometry see soil carbon through NORM and soil-composition backgrounds?
 
-Package built on the Mac, 2026-09-24. Research plan: `Agents/plan/RESEARCH_PLAN.md`
-(on the Mac). Operating procedure on nuccomp1: `RUNBOOK_V4.md`. Findings made while
-building and testing the package: `PREP_NOTES_V4.md` (read it: several of them change
-how results must be interpreted).
+This is the simulation behind the final ASC report. It was prepared in September 2026
+and run on the ANU `nuccomp1` server (Geant4 11.3) in September-October 2026.
+Findings made while building and testing it are in `PREP_NOTES_V4.md` (read it:
+several of them change how results must be interpreted). A capture-model issue found
+after the campaign is described in §6.
 
 ## 1. What this campaign computes
 
@@ -17,7 +18,7 @@ above the ground, unchanged from v1-v3) would record from:
    series, each per 1 Bq/kg of the parent in the mineral), which the analysis scales
    by each soil's measured K, U and Th.
 
-The analysis (on the Mac, afterwards) combines them into expected field spectra and
+The analysis (done separately, afterwards) combines them into expected field spectra and
 asks, signal by signal (4.438 MeV carbon, the C/O ratio, 2.223 MeV hydrogen, capture
 ratios, the whole spectrum), whether the SOC information survives NORM counting noise
 and site-to-site variation in the rest of the soil.
@@ -54,7 +55,7 @@ Key differences from v3 (see PREP_NOTES_V4.md for the evidence):
 
 ## 3. The runs
 
-`plan.json` (from `run_v4.py plan`) lists every job. Families:
+`plan.json` (from `run_v4.py plan --profile full`) lists every job. Families:
 
 | family | runs | what varies | CRY | NORM |
 |---|---|---|---|---|
@@ -101,10 +102,9 @@ central runs (kept for later re-analysis, ~0.4 GB per run).
 - Analog: `analog_pulses` (event, t_ns, edep, edep from soil gammas, from other soil
   particles, primary PDG) and `analog_tags` (event, t_ns, E, pdg).
 
-## 5. Expected values (Mac, Geant4 11.4.2, 2026-09-24)
+## 5. Expected values (pilot runs, Geant4 11.4.2, 2026-09-24)
 
-See RUNBOOK_V4.md Appendix B for per-job wall times and output sizes measured in the
-pilot. Physics sanity values (chromosol central):
+Physics sanity values (chromosol central):
 
 | quantity | expected |
 |---|---|
@@ -125,5 +125,14 @@ pilot. Physics sanity values (chromosol central):
   0, 2100 and 11300 m. Cosmic flux normalisation is a nuisance parameter in the analysis.
 - Boron is assumed (20 ppm central, 5 and 60 ppm variants): NGSA reports only
   aqua-regia B.
-- The detector is the idealised v1-v3 crystal (the user chose to keep it); resolution
-  is applied in the analysis.
+- The detector is the idealised v1-v3 crystal (kept deliberately); resolution is
+  applied in the analysis.
+- **Capture-model target re-selection (found after the campaign).**
+  `G4NeutronHPCapture` re-selects the target element itself, so inside
+  `V4CaptureModel` a capture assigned to a non-hydrogen nucleus can still end on H-1
+  (with probability about the hydrogen share of captures, p_H ~ 0.37) and get HP's own
+  H-1 photons. The campaign's 2.223 MeV line is therefore too strong (about x1.5) and
+  the other capture lines too weak (x(1 - p_H)). The code is left as run so it matches
+  the published results; the analysis corrects every run (p_H from the Si lines and
+  the neutron flux tallies; checked against `phys_capdefault`). The fix is described in
+  `include/v4/V4CaptureModel.hh`.

@@ -5,7 +5,7 @@
 Columns: run, family, change, CRY total counts/day, CRY and NORM counts/day in a
 few line windows (ideal resolution, 1 keV bins, +-3 keV), the oxygen/carbon split of
 the 4.44 MeV window, and the MC relative error of each CRY value (32 shower batches).
-Meant for sanity checks and RUN_NOTES, not for results.
+Meant for sanity checks, not for results.
 """
 
 import csv
@@ -13,10 +13,8 @@ import json
 import sys
 from pathlib import Path
 
-import numpy as np
-
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from spectra import Run, N_BATCH  # noqa: E402
+from spectra import Run  # noqa: E402
 
 LINES = {"0.511": 0.511, "1.461": 1.4608, "1.779": 1.7788, "2.223": 2.2232,
          "2.614": 2.6145, "3.539": 3.5394, "4.438": 4.4389, "4.934": 4.9335,

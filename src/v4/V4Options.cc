@@ -85,7 +85,6 @@ V4Options V4Options::Parse(const std::vector<std::string>& args)
         else if (key == "--norm-depth-cm") o.normDepth_cm = std::stod(v);
         else if (key == "--roulette-tau") o.rouletteTau = std::stod(v);
         else if (key == "--norm-samples") o.normSamples = std::stoull(v);
-        else if (key == "--debug-weight") o.debugWeight = std::stod(v);
         else if (key == "--source-height-m") o.sourceHeight_m = std::stod(v);
         else {
             throw std::runtime_error("unknown option '" + key + "'\n" + Usage());
@@ -155,7 +154,7 @@ Transport: --input FILE (GC4PROD or GC4NLIB)  --replays R (1)  --norm-samples N
          --sampler is|uniform  --r-max-m R (5)  --shadow-fraction P (0.6)
          --wide-fraction F (0.5)  --wide-margin-cm M (40)  --uniform-fraction U (0.2)
          --broad-scale-cm A (30)  --batches B (32)  --norm-depth-cm D (100)
-         --roulette-tau T (5; <=0 disables)  --debug-weight W (log hits with w > W)
+         --roulette-tau T (5; <=0 disables)
 Analog:  --cry-setup FILE  --source-height-m H (1.0)
 )";
 }

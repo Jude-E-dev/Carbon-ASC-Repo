@@ -1,6 +1,6 @@
 /**
  * @file gc4.cc
- * @brief v4 driver for the ground-carbon simulation (see Agents/plan/RESEARCH_PLAN.md).
+ * @brief v4 driver for the ground-carbon simulation (see campaign_v4/README_V4.md).
  *
  * One binary for every soil: compositions are read at run time from `.soil`
  * files. Modes:
@@ -16,7 +16,7 @@
  *   analog        CRY above soil and detector, everything tracked, detector
  *                 pulses with times and origin, tag-volume crossings.
  *
- * The legacy three-stage `groundCarbon` binary is unchanged.
+ * The legacy three-stage `groundCarbon` binary (v1-v3) is built separately.
  */
 
 #include <G4RunManagerFactory.hh>

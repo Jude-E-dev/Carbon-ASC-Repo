@@ -1,7 +1,8 @@
 # PREP_NOTES_V4: findings while building and testing the v4 package
 
-Mac (M3 Pro), Geant4 11.4.2, 2026-09-24. Where these notes disagree with
-README_V4.md or the research plan, these notes win.
+Development log from building and testing v4 (Mac M3 Pro, Geant4 11.4.2,
+2026-09-24 to 2026-09-26). Where these notes disagree with README_V4.md, these notes
+win, except for the capture-model issue in README_V4.md §6, which was found later.
 
 ## 1. Geant4 11.4 changed the neutron-capture photons (matters for every capture line)
 
@@ -16,7 +17,7 @@ Since Geant4 11.4 (phys-builders-V11-03-00, 2025-06) the HP physics lists use
 | Si strongest lines | 1.273 (0.33), 2.028 (0.26) | 3.539, 4.934, 8.474 | 3.539, 4.934 |
 | Fe-56(n,g) 7.631 / 7.646 MeV | absent | 0.15 / 0.12 | ~0.27 / 0.22 |
 
-Geant4 11.3 (nuccomp1, v3, Jay's runs) still used `G4NeutronHPCapture`, so v1-v3 are
+Geant4 11.3 (nuccomp1, the v1-v3 campaigns) still used `G4NeutronHPCapture`, so v1-v3 are
 unaffected.
 
 **Hydrogen needs its own treatment.** G4NDL has no capture photon data for H-1, so
@@ -83,7 +84,7 @@ and carried heavy weights. The NORM continuum near 2.2 MeV improved from ~46% to
 error per 10 keV bin for 2 M samples (~6% at the campaign's 32 M).
 
 **Heavy tails, and the final sampler (2026-09-26).** Logging every hit with weight > 2e4
-(`--debug-weight`) showed the heaviest hits are scattered photons that start just outside
+(a temporary diagnostic, since removed) showed the heaviest hits are scattered photons that start just outside
 the tight shadow or 1-2 m from the detector, where only the thin broad density samples
 them. With 2 replays one such hit put 2196 +- 92% counts/day into a 50 keV continuum
 window that reads 164 +- 9% with 8 replays; and on the synthetic source the IS *total*

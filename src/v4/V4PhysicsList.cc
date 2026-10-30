@@ -6,20 +6,21 @@
 #include <G4HadronElasticPhysicsHP.hh>
 #include <G4HadronPhysicsFTFP_BERT_HP.hh>
 #include <G4HadronPhysicsQGSP_BIC_HP.hh>
+#include <G4HadronicInteraction.hh>
+#include <G4HadronicProcess.hh>
 #include <G4IonElasticPhysics.hh>
 #include <G4IonPhysics.hh>
+#include <G4Neutron.hh>
+#include <G4ProcessManager.hh>
 #include <G4RadioactiveDecayPhysics.hh>
 #include <G4StoppingPhysics.hh>
 #include <G4SystemOfUnits.hh>
-#include <G4HadronicInteraction.hh>
-#include <G4HadronicProcess.hh>
-#include <G4Neutron.hh>
-#include "v4/V4CaptureModel.hh"
-#include <G4ProcessManager.hh>
 #include <G4ThermalNeutrons.hh>
 #include <G4ios.hh>
 
 #include <stdexcept>
+
+#include "v4/V4CaptureModel.hh"
 
 V4PhysicsList::V4PhysicsList(
     const std::string& hadronic,

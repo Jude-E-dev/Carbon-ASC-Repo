@@ -29,12 +29,6 @@ struct V4EventState
     int originClass = 0;
     int batch = 0;
     double zSource_cm = 0.0;
-    // for --debug-weight diagnostics
-    double eLeading_MeV = 0.0;
-    double muFirst = 0.0;
-    double x_cm = 0.0;
-    double y_cm = 0.0;
-    int nGammas = 0;
 };
 
 /** @brief Base with an exposure/area report used by the run action. */

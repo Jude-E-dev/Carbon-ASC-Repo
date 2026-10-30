@@ -13,7 +13,7 @@
  * Neutron capture final state: from Geant4 11.4 the HP lists use
  * G4NeutronRadCaptureHP (PhotonEvaporation cascades), which drops the
  * dominant Si-28(n,g) lines at 3.539 and 4.934 MeV. Geant4 11.3 and earlier
- * (Jay's runs, v1-v3) use G4NeutronHPCapture, which samples the evaluated
+ * (the v1-v3 campaigns) use G4NeutronHPCapture, which samples the evaluated
  * (G4NDL) capture photons where they exist. captureModel "hp" (default)
  * installs V4CaptureModel below 20 MeV on every version (G4NeutronHPCapture,
  * with exact kinematics for H-1, which has no G4NDL photon data), so results

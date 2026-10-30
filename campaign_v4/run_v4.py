@@ -12,10 +12,10 @@ Subcommands (all take --root, the campaign run directory):
   status  Counts by kind and state, core-hours used and estimated remaining.
   reduce  Sum each finished run's chunks into ROOT/reduced/<run>.npz (+ .json).
   bundle  Pack ROOT/reduced, the plan, every manifest and a log digest into
-          ROOT/v4_results_<date>.tar.gz for the analysis on the Mac.
+          ROOT/v4_results_<date>.tar.gz for the analysis.
 
 Only the standard library is needed except for `reduce` (numpy).
-See RUNBOOK_V4.md for the operating procedure on nuccomp1.
+See README_V4.md for what each job family computes and the output units.
 """
 
 import argparse
@@ -23,10 +23,8 @@ import datetime as dt
 import hashlib
 import json
 import os
-import shutil
 import signal
 import subprocess
-import sys
 import tarfile
 import time
 from pathlib import Path

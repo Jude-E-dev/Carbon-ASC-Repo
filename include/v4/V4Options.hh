@@ -72,7 +72,6 @@ struct V4Options
     G4double normDepth_cm = 100.0;
     G4double rouletteTau = 5.0;   // optical depth where roulette starts (<=0 off)
     std::uint64_t normSamples = 0; // NORM: groups to transport (events)
-    G4double debugWeight = 0.0;    // log hits with weight above this (0 = off)
 
     // analog
     G4double sourceHeight_m = 1.0;

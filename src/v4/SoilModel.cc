@@ -56,7 +56,6 @@ SoilModel SoilModel::Load(const std::string& path)
     }
 
     SoilModel model;
-    model.sourcePath = path;
     std::string raw;
     int lineNo = 0;
     bool sawHeader = false;

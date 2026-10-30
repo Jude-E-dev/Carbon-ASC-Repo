@@ -503,11 +503,6 @@ void V4TransportGenerator::GeneratePrimaries(G4Event* event)
     state->weight = baseWeight * roulette * where.invQ_cm2;
     state->originClass = v4::OriginClass(leading->proc, leading->targetZ);
     state->zSource_cm = z_cm;
-    state->eLeading_MeV = maxE;
-    state->muFirst = directions.front().z();
-    state->x_cm = where.x_cm;
-    state->y_cm = where.y_cm;
-    state->nGammas = static_cast<int>(emit.size());
 
     const G4ThreeVector position(where.x_cm * cm, where.y_cm * cm, z_cm * cm);
     if (state->weight <= 0.0) {

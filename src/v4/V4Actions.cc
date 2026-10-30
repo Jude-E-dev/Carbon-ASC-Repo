@@ -100,13 +100,6 @@ void V4EventAction::EndOfEventAction(const G4Event* event)
         const double edep = sd != nullptr ? sd->TotalEdep() / MeV : 0.0;
         if (edep > 0.001 && shared->event.weight > 0.0) {
             // weight is per event, set by V4TransportGenerator
-            const auto& st = shared->event;
-            if (o.debugWeight > 0.0 && st.weight > o.debugWeight) {
-                G4cout << "HEAVY w=" << st.weight << " edep=" << edep << " E=" << st.eLeading_MeV
-                       << " z=" << st.zSource_cm << " mu=" << st.muFirst << " x=" << st.x_cm
-                       << " y=" << st.y_cm << " n=" << st.nGammas << " class=" << st.originClass
-                       << " batch=" << st.batch << G4endl;
-            }
             shared->output.FillTransport(
                 shared->event.originClass,
                 shared->event.batch,

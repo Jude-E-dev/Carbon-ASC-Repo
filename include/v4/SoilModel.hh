@@ -2,14 +2,14 @@
 
 #include <G4Types.hh>
 
-#include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
 /**
  * @brief A soil column read at run time from a `.soil` text file (written by
- * the Python soil builder, Geochemical Survey/Soil_Types_JSON_v2/build_soil.py).
+ * the project's Python soil builder from NGSA geochemistry; not in this
+ * repository).
  *
  * The file describes a set of phases (mineral, water, organic matter, air,
  * each with element mass fractions) and a stack of layers, each with a bulk
@@ -69,8 +69,6 @@ class SoilModel
         G4double u1,
         G4double u2
     ) const;
-
-    std::string sourcePath;
 
   private:
     std::string name;
