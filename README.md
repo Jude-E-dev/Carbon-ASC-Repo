@@ -139,4 +139,4 @@ Geant4 can be opened in UI mode at any point by running `groundCarbon <stage> <p
 without a number of runs. Using `beamOn` in the UI produces outputs as before.
 
 `env.sh` and `run.sh` set up the environment and run the legacy binary from `build/`
-(edit the Geant4 install path in `env.sh` for your machine).
+(set `G4_INSTALL` to your Geant4 install directory).

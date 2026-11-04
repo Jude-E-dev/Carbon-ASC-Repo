@@ -11,14 +11,15 @@
 
 _gc_env_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" > /dev/null 2>&1 && pwd)"
 
-_gc_g4_install="/Users/judeelzinga/Desktop/Geant4/install-11.4.2"
+# Geant4 install directory (containing bin/geant4.sh); override with G4_INSTALL.
+_gc_g4_install="${G4_INSTALL:-$HOME/Desktop/Geant4/install-11.4.2}"
 
 if [ -f "$_gc_g4_install/bin/geant4.sh" ]; then
   # shellcheck disable=SC1091
   . "$_gc_g4_install/bin/geant4.sh"
 else
   echo "env.sh: WARNING: Geant4 install not found at $_gc_g4_install" >&2
-  echo "         Update _gc_g4_install in this script if it has moved." >&2
+  echo "         Set G4_INSTALL to the directory containing bin/geant4.sh." >&2
 fi
 
 export CRYHOME="$(cd "$_gc_env_dir/../cry_v1.7" > /dev/null 2>&1 && pwd)"
